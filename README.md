@@ -26,3 +26,7 @@ Product_Info_4, Ins_Age, Ht, Wt, BMI, Employment_Info_1, Employment_Info_4, Empl
 Medical_History_1, Medical_History_10, Medical_History_15, Medical_History_24, Medical_History_32
 
 Medical_Keyword_1-48 are dummy variables.
+
+#### Method
+1. One-hot encode all the variables, 
+2. dropping dummies with very low counts (i.e. 1's less than 10) - in total ~300 variables.
