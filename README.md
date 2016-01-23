@@ -41,3 +41,13 @@ Medical_Keyword_1-48 are dummy variables.
 7. BMI * Ins_Age, row-wise.
 8. Clusterize the whole data (join train & test, impute the missing values with the mean in these data, apply kmeans) and provide the clusters row-wise.
 9. Optimize the cut-offs using 'optim'.
+
+10. 0.002 improvement by optimizing cut-points using a genetic algorithm, compared to using this offset function. (Python code)
+
+#### Training Methods
+1. Genetic programming
+2. Xgboost
+3. nnet
+4. mlr
+5. linear regression
+6. 
