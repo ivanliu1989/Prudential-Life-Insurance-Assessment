@@ -1,10 +1,11 @@
+setwd('/Users/ivanliu/Downloads/Prudential-Life-Insurance-Assessment')
 library(readr)
 library(Rtsne)
 set.seed(42) 
 
 # The competition datafiles are in the directory ../input
 # Read competition data files:
-train <- read_csv("../input/train.csv")
+train <- read_csv("data/train.csv")
 
 #select a subset of the responses.  Here, 1&2 are mostly separable from 7,8 but not from each other
 showResponses = c(1,2,7,8)

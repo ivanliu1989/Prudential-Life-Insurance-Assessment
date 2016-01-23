@@ -1,3 +1,4 @@
+setwd('/Users/ivanliu/Downloads/Prudential-Life-Insurance-Assessment')
 library(readr)
 library(xgboost)
 
