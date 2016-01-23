@@ -30,3 +30,14 @@ Medical_Keyword_1-48 are dummy variables.
 #### Method
 1. One-hot encode all the variables, 
 2. dropping dummies with very low counts (i.e. 1's less than 10) - in total ~300 variables.
+
+#### Tips from Kaggle Forum
+1. One feature that seemed to help was a count of the number of medical keywords
+2. The product of BMI and Ins_Age also seemed helpful whereas the ratio did not, which is not the result I expected.
+3. Count the number of NA's row-wise.
+4. Get rid of Medical_History_10 and Medical_History_24.
+5. One shot encoding for Product_Info_2.
+6. Count the number of Medical_keywords_* row-wise.
+7. BMI * Ins_Age, row-wise.
+8. Clusterize the whole data (join train & test, impute the missing values with the mean in these data, apply kmeans) and provide the clusters row-wise.
+9. Optimize the cut-offs using 'optim'.
