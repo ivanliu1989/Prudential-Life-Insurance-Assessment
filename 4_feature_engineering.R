@@ -228,10 +228,29 @@ sapply(names(total), function(x){mean(is.na(total[,x]))})
 #########################################
 # 8. kmeans & tsne based on sectors #####
 #########################################
+total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))], dummies, Response = total$Response)
+library(Rtsne)
+feature.names <- 
 
+tsne <- Rtsne(as.matrix(total_new[,-c(1,ncol(total_new))]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_2d <- embedding[,1:2]; names(tsne_2d) <- c('tsne_2d_1','tsne_2d_2')
+
+colors = rainbow(8)
+names(colors) = 1:8
+plot(tsne$Y, t='n')
+text(tsne$Y, labels=train$Response, col=colors[train$Response])
 
 #####################
 # 9. Re-combine #####
 #####################
-total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))], dummies, Response = total$Response)
 
+train <- total_new[total_new$Response != 9, ]
+test <- total_new[total_new$Response == 9, ]
+library(caret)
+set.seed(1989)
+inTraining <- createDataPartition(train$Response, p = .8, list = FALSE)
+validation <- train[-inTraining,]
+train <- train[inTraining,]
+
+save(train, test, validation, file = 'cleaned_datasets.RData')
