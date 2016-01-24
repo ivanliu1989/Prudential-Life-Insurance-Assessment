@@ -1,10 +1,8 @@
+setwd('/Users/ivanliu/Downloads/Prudential-Life-Insurance-Assessment')
 library(readr)
 library(xgboost)
 library(Metrics)
-
-# I have not yet swept the parameters very well - probably a lot of room for improvement.
-# Enjoy - jps
-
+library(data.table)
 ####################################################################################################
 # FUNCTION / VARIABLE DECLARTIONS
 ####################################################################################################
@@ -19,15 +17,15 @@ evalerror <- function(preds, dtrain) {
 # declare these as variables: easier to reuse the script; and many are included in the output filename
 myObjective       <- "multi:softmax"  # xgb parm... objective... multiclass classification
 myBooster         <- "gbtree"         # xgb parm... type of booster... gbtree 
-myValSetPCT       <- 5.0              # pct of training set to hold for validation
-myEta             <- 0.02             # xgb parm... smaller = more conservative
-myGamma           <- 0.3              # xgb parm... bigger = more conservative
-myMaxDepth        <- 15               # xgb parm... bigger = might overfit
-mySubsample       <- 0.9              # xgb parm... 0.9 to 0.7 usually good
+myValSetPCT       <- 20.0              # pct of training set to hold for validation
+myEta             <- 0.01             # xgb parm... smaller = more conservative 0.02
+myGamma           <- 0.1              # xgb parm... bigger = more conservative 0.3
+myMaxDepth        <- 8               # xgb parm... bigger = might overfit 15
+mySubsample       <- 0.9              # xgb parm... 0.9 to 0.7 usually good 
 myColSampleByTree <- 0.7              # xgb parm... 0.5 to 0.7 usually good
-myMinChildWeight  <- 3                # xgb parm... bigger = more conservative
+myMinChildWeight  <- 1                # xgb parm... bigger = more conservative 3
 myNRounds         <- 100              # xgb parm... bigger = might overfit
-myEarlyStopRound  <- 10               # xgb parm... stop learning early if no increase after this many rounds
+myEarlyStopRound  <- 50               # xgb parm... stop learning early if no increase after this many rounds
 myNThread         <- 3                # num threads to use
 
 ####################################################################################################
@@ -36,8 +34,8 @@ myNThread         <- 3                # num threads to use
 set.seed(1234)
 
 cat("read train and test data...\n")
-train <- read_csv("../input/train.csv")
-test  <- read_csv("../input/test.csv")
+train <- fread("data/train.csv", data.table = F)
+test  <- fread("data/test.csv", data.table = F)
 
 feature.names <- names(train)[2:ncol(train)-1]
 
@@ -87,7 +85,7 @@ clf <- xgb.train(params              = param,
                  watchlist           = watchlist,
                  feval               = evalerror,
                  maximize            = TRUE,
-                 verbose             = 0
+                 verbose             = 1
 )
 
 # just for keeping track of how things went...
