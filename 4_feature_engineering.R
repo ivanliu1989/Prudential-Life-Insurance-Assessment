@@ -228,6 +228,7 @@ sapply(names(total), function(x){mean(is.na(total[,x]))})
 #########################################
 # 8. kmeans & tsne based on sectors #####
 #########################################
+# i. tsne clustering
 total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))], dummies, Response = total$Response)
 library(Rtsne)
 feature.names <- 
@@ -239,7 +240,18 @@ tsne_2d <- embedding[,1:2]; names(tsne_2d) <- c('tsne_2d_1','tsne_2d_2')
 colors = rainbow(8)
 names(colors) = 1:8
 plot(tsne$Y, t='n')
-text(tsne$Y, labels=train$Response, col=colors[train$Response])
+text(tsne$Y, labels=total_new$Response, col=colors[total_new$Response])
+
+# ii. kmeans clustering
+library(h2o)
+feature.names <- 
+
+localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
+kmeans_df <- as.h2o(localH2O, total_new[,feature.names])
+cols <- c(colnames(kmeans_df))
+fit <- h2o.kmeans(kmeans_df, centers = 6, cols=cols, iter.max = 100000, normalize = T, init = 'none') #none, plusplus, furthest
+pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
+all$kmeans_trans <- pred[,1]; table(all$kmeans_trans)
 
 #####################
 # 9. Re-combine #####
