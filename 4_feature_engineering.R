@@ -310,8 +310,11 @@ train <- total_new[total_new$Response != 9, ]
 test <- total_new[total_new$Response == 9, ]
 library(caret)
 set.seed(1989)
+inTraining <- createDataPartition(train$Response, p = .9, list = FALSE)
+validation_10 <- train[-inTraining,]
+train_10 <- train[inTraining,]
 inTraining <- createDataPartition(train$Response, p = .8, list = FALSE)
-validation <- train[-inTraining,]
-train <- train[inTraining,]
+validation_20 <- train[-inTraining,]
+train_20 <- train[inTraining,]
 
-save(train, test, validation, file = 'cleaned_datasets.RData')
+save(train, test, validation_10, validation_20, train_10, train_20, file = 'cleaned_datasets.RData')
