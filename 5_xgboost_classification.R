@@ -17,14 +17,14 @@ evalerror <- function(preds, dtrain) {
 # declare these as variables: easier to reuse the script; and many are included in the output filename
 myObjective       <- "multi:softmax"  # xgb parm... objective... multiclass classification
 myBooster         <- "gbtree"         # xgb parm... type of booster... gbtree 
-myValSetPCT       <- 20.0              # pct of training set to hold for validation
-myEta             <- 0.01             # xgb parm... smaller = more conservative 0.02
+# myValSetPCT       <- 20.0              # pct of training set to hold for validation
+myEta             <- 0.05             # xgb parm... smaller = more conservative 0.02
 myGamma           <- 0.1              # xgb parm... bigger = more conservative 0.3
-myMaxDepth        <- 8               # xgb parm... bigger = might overfit 15
+myMaxDepth        <- 6               # xgb parm... bigger = might overfit 15
 mySubsample       <- 0.9              # xgb parm... 0.9 to 0.7 usually good 
 myColSampleByTree <- 0.7              # xgb parm... 0.5 to 0.7 usually good
-myMinChildWeight  <- 1                # xgb parm... bigger = more conservative 3
-myNRounds         <- 100              # xgb parm... bigger = might overfit
+myMinChildWeight  <- 240                # xgb parm... bigger = more conservative 3
+myNRounds         <- 700              # xgb parm... bigger = might overfit
 myEarlyStopRound  <- 50               # xgb parm... stop learning early if no increase after this many rounds
 myNThread         <- 3                # num threads to use
 
@@ -36,14 +36,14 @@ set.seed(1989)
 cat("read train and test data...\n")
 load("data/cleaned_datasets.RData")
 
-feature.names <- names(train_20)[2:ncol(train_20)-1]
+feature.names <- names(train)[2:ncol(train)-1]
 
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
-train_20$Response = train_20$Response - 1
+train_20$Response = train_20$Response - 1 # train_20, train_10
 
 cat("create dval/dtrain/watchlist...\n")
-dval       <- xgb.DMatrix(data=data.matrix(validation_20[,feature.names]),label=validation_20$Response)
-dtrain     <- xgb.DMatrix(data=data.matrix(train_20[,feature.names]),label=train_20$Response)
+dval       <- xgb.DMatrix(data=data.matrix(validation_20[,feature.names]),label=validation_20$Response) # validation_20, validation_10
+dtrain     <- xgb.DMatrix(data=data.matrix(train_20[,feature.names]),label=train_20$Response) # train_20, train_10
 watchlist  <- list(val=dval,train=dtrain)
 
 cat("running xgboost...\n")
@@ -74,10 +74,10 @@ clf <- xgb.train(params              = param,
 
 # just for keeping track of how things went...
 # run prediction on training set so we can add the value to our output filename
-trainPreds <- as.integer(round(predict(clf, data.matrix(train[,feature.names]))))
-trainScore <- ScoreQuadraticWeightedKappa(round(trainPreds),train$Response)
+validPreds <- as.integer(round(predict(clf, data.matrix(validation_20[,feature.names])))) # validation_20, validation_10
+validScore <- ScoreQuadraticWeightedKappa(round(validPreds),validation_20$Response) # validation_20, validation_10
 
-outFileName <- paste("z0.00000 - ",trainScore,
+outFileName <- paste("z0.00000 - ",validScore,
                      " - ",clf$bestScore,
                      " - xgb - kappa - softmax",
                      " - ",myBooster,
