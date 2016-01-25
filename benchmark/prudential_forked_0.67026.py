@@ -40,15 +40,15 @@ xgb_num_rounds = 500
 num_classes = 8
 
 print("Load the data using pandas")
-train = pd.read_csv("../input/train.csv")
-test = pd.read_csv("../input/test.csv")
+train = pd.read_csv("data/train.csv")
+test = pd.read_csv("data/test.csv")
 
 # combine train and test
 all_data = train.append(test)
 
 # create any new variables    
-all_data['Product_Info_2_char'] = all_data.Product_Info_2.str[1]
-all_data['Product_Info_2_num'] = all_data.Product_Info_2.str[2]
+all_data['Product_Info_2_char'] = all_data.Product_Info_2.str[0]
+all_data['Product_Info_2_num'] = all_data.Product_Info_2.str[1]
 
 # factorize categorical variables
 all_data['Product_Info_2'] = pd.factorize(all_data['Product_Info_2'])[0]

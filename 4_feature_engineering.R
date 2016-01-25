@@ -221,6 +221,7 @@ Cnt_NA_row <- apply(total, 1, function(x) sum(is.na(x)))
 #####################
 for(i in na.features){
     total[is.na(total[,i]),i] <- median(total[,i], na.rm = T)
+    # total[is.na(total[,i]),i] <- -1
 }
 sapply(names(total), function(x){mean(is.na(total[,x]))})
 
@@ -302,6 +303,9 @@ kmeans_all <- pred[,1]; table(kmeans_all)
 # 9. Re-combine #####
 #####################
 total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))], dummies, 
+                   Cnt_Medi_Key_Word = Cnt_Medi_Key_Word,
+                   BMI_InsAge = BMI_InsAge, 
+                   Cnt_NA_row = Cnt_NA_row,
                    tsne_ALL, tsne_MH, tsne_MK, tsne_PI, tsne_EI, tsne_II, tsne_IH, tsne_FH, tsne_CI,
                    KMEANS_ALL = kmeans_all, 
                    Response = total$Response)
@@ -317,4 +321,4 @@ inTraining <- createDataPartition(train$Response, p = .8, list = FALSE)
 validation_20 <- train[-inTraining,]
 train_20 <- train[inTraining,]
 
-save(train, test, validation_10, validation_20, train_10, train_20, file = 'cleaned_datasets.RData')
+save(train, test, validation_10, validation_20, train_10, train_20, file = 'data/cleaned_datasets.RData')
