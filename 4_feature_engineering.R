@@ -17,7 +17,7 @@ test  <- fread("data/test.csv", data.table = F)
 ##########################
 # ID + 126 FEATURES + RESPONSE = 128 COLUMNS
 summary(train)
-par(mfcol = c(2,1))
+par(mfcol = c(1,1))
 # i. Product Info 1-7
 table(train$Product_Info_1); table(test$Product_Info_1) # Categorical - 2
 table(train$Product_Info_2); table(test$Product_Info_2) # Categorical - 19
@@ -232,8 +232,8 @@ sapply(names(total), function(x){mean(is.na(total[,x]))})
 total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))], dummies, Response = total$Response)
 library(Rtsne)
 feature.names <- 
-
-tsne <- Rtsne(as.matrix(total_new[,-c(1,ncol(total_new))]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+    
+    tsne <- Rtsne(as.matrix(total_new[,-c(1,ncol(total_new))]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
 embedding <- as.data.frame(tsne$Y)
 tsne_2d <- embedding[,1:2]; names(tsne_2d) <- c('tsne_2d_1','tsne_2d_2')
 
@@ -245,8 +245,8 @@ text(tsne$Y, labels=total_new$Response, col=colors[total_new$Response])
 # ii. kmeans clustering
 library(h2o)
 feature.names <- 
-
-localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
+    
+    localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
 kmeans_df <- as.h2o(localH2O, total_new[,feature.names])
 cols <- c(colnames(kmeans_df))
 fit <- h2o.kmeans(kmeans_df, centers = 6, cols=cols, iter.max = 100000, normalize = T, init = 'none') #none, plusplus, furthest
