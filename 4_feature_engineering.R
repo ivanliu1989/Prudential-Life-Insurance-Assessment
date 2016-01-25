@@ -216,6 +216,13 @@ Cnt_NA_row <- apply(total, 1, function(x) sum(is.na(x)))
 
 # iv. get rid of Medical_History_10 and Medical_History_24
 
+# v. split between Product_Info_2
+Product_Info_2_cate <- substr(total$Product_Info_2, 1,1)
+Product_Info_2_num <- substr(total$Product_Info_2, 2,2)
+Product_Info_2_split <- cbind(Product_Info_2_cate=Product_Info_2_cate, Product_Info_2_num=Product_Info_2_num)
+Product_Info_2_split <- data.frame(model.matrix(~.-1,as.data.frame(Product_Info_2_split)))
+head(Product_Info_2_split)
+
 #####################
 # 7. Imputation #####
 #####################
@@ -299,6 +306,8 @@ fit <- h2o.kmeans(kmeans_df, k = 4, max_iterations = 50000, standardize = T, ini
 pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
 kmeans_all <- pred[,1]; table(kmeans_all)
 
+save(tsne_ALL, tsne_MH, tsne_MK, tsne_PI, tsne_EI, tsne_II, tsne_IH, tsne_FH, tsne_CI, kmeans_all, file = 'data/cleaned_datasets.RData')
+
 #####################
 # 9. Re-combine #####
 #####################
@@ -306,6 +315,7 @@ total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))]
                    Cnt_Medi_Key_Word = Cnt_Medi_Key_Word,
                    BMI_InsAge = BMI_InsAge, 
                    Cnt_NA_row = Cnt_NA_row,
+                   Product_Info_2_split,
                    tsne_ALL, tsne_MH, tsne_MK, tsne_PI, tsne_EI, tsne_II, tsne_IH, tsne_FH, tsne_CI,
                    KMEANS_ALL = kmeans_all, 
                    Response = total$Response)
