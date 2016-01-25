@@ -56,7 +56,6 @@ table(train$Insurance_History_2); table(test$Insurance_History_2) # Categorical 
 table(train$Insurance_History_3); table(test$Insurance_History_3) # Categorical - 3
 table(train$Insurance_History_4); table(test$Insurance_History_4) # Categorical - 3
 table(train$Insurance_History_5); table(test$Insurance_History_5) # Numerical (Continuous)
-table(train$Insurance_History_6); table(test$Insurance_History_6) # All NAs
 table(train$Insurance_History_7); table(test$Insurance_History_7) # Categorical - 3
 table(train$Insurance_History_8); table(test$Insurance_History_8) # Categorical - 3
 table(train$Insurance_History_9); table(test$Insurance_History_9) # Categorical - 3
@@ -231,31 +230,81 @@ sapply(names(total), function(x){mean(is.na(total[,x]))})
 # i. tsne clustering
 total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))], dummies, Response = total$Response)
 library(Rtsne)
-feature.names <- 
-    
-    tsne <- Rtsne(as.matrix(total_new[,-c(1,ncol(total_new))]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+# 1) Medical History TSNE
+feature.names <- grep("Medical_History",names(total_new))
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
 embedding <- as.data.frame(tsne$Y)
-tsne_2d <- embedding[,1:2]; names(tsne_2d) <- c('tsne_2d_1','tsne_2d_2')
+tsne_MH <- embedding[,1:2]; names(tsne_MH) <- c('TSNE_MH_1','TSNE_MH_2')
 
-colors = rainbow(8)
-names(colors) = 1:8
-plot(tsne$Y, t='n')
-text(tsne$Y, labels=total_new$Response, col=colors[total_new$Response])
+# 2) Medical Keyword TSNE
+feature.names <- grep("Medical_Keyword",names(total_new))
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_MK <- embedding[,1:2]; names(tsne_MK) <- c('TSNE_MK_1','TSNE_MK_2')
+
+# 3) Product Info TSNE
+feature.names <- grep("Product_Info",names(total_new))
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_PI<- embedding[,1:2]; names(tsne_PI) <- c('TSNE_PI_1','TSNE_PI_2')
+
+# 4) Employment Info TSNE
+feature.names <- grep("Employment_Info",names(total_new))
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_EI <- embedding[,1:2]; names(tsne_EI) <- c('TSNE_EI_1','TSNE_EI_2')
+
+# 5) Insured Info TSNE
+feature.names <- grep("InsuredInfo_",names(total_new))
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_II <- embedding[,1:2]; names(tsne_II) <- c('TSNE_II_1','TSNE_II_2')
+
+# 6) Insurance History TSNE
+feature.names <- grep("Insurance_History",names(total_new))
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_IH <- embedding[,1:2]; names(tsne_IH) <- c('TSNE_IH_1','TSNE_IH_2')
+
+# 7) Family History TSNE
+feature.names <- grep("Family_Hist",names(total_new))
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_FH <- embedding[,1:2]; names(tsne_FH) <- c('TSNE_FH_1','TSNE_FH_2')
+
+# 8) User Information TSNE
+feature.names <- c('Ins_Age', 'Ht', 'Wt', 'BMI')
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_CI <- embedding[,1:2]; names(tsne_CI) <- c('TSNE_CI_1','TSNE_CI_2')
+
+# 9) all tsne
+feature.names <- names(total_new)[-c(1, ncol(total_new))]
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_ALL <- embedding[,1:2]; names(tsne_ALL) <- c('TSNE_ALL_1','TSNE_ALL_2')
+
+# colors = rainbow(8)
+# names(colors) = 1:8
+# plot(tsne$Y, t='n')
+# text(tsne$Y, labels=total_new$Response, col=colors[total_new$Response])
 
 # ii. kmeans clustering
 library(h2o)
-feature.names <- 
-    
-    localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
+feature.names <- names(total_new)[-c(1, ncol(total_new))]    
+localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
 kmeans_df <- as.h2o(localH2O, total_new[,feature.names])
-cols <- c(colnames(kmeans_df))
-fit <- h2o.kmeans(kmeans_df, centers = 6, cols=cols, iter.max = 100000, normalize = T, init = 'none') #none, plusplus, furthest
+fit <- h2o.kmeans(kmeans_df, k = 4, max_iterations = 50000, standardize = T, init = 'Random', seed = 1989) #none, PlusPlus, Furthest, Random
 pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
-all$kmeans_trans <- pred[,1]; table(all$kmeans_trans)
+kmeans_all <- pred[,1]; table(kmeans_all)
 
 #####################
 # 9. Re-combine #####
 #####################
+total_new <- cbind(total[,-which(names(total) %in% c(cate.features,'Response'))], dummies, 
+                   tsne_ALL, tsne_MH, tsne_MK, tsne_PI, tsne_EI, tsne_II, tsne_IH, tsne_FH, tsne_CI,
+                   KMEANS_ALL = kmeans_all, 
+                   Response = total$Response)
 
 train <- total_new[total_new$Response != 9, ]
 test <- total_new[total_new$Response == 9, ]
