@@ -56,3 +56,5 @@ Medical_Keyword_1-48 are dummy variables.
 1. Raw + tsne + kmean + -1 null - 0.545304983686086/0.565425847292581
 2. Raw + -1 null - 0.547655889464964/0.546402606859081
 3. Encoded + tsne + kmean + median null - 0.552005910930349/0.554265566239907
+4. Encoded + tsne + kmean + -1 null - 0.552686232725092/0.556587256317558
+5. Benchmark - 0.525480640019559/0.671169859915566 

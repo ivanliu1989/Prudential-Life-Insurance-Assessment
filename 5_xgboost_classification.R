@@ -3,6 +3,7 @@ library(readr)
 library(xgboost)
 library(Metrics)
 rm(list=ls());gc()
+# [Tune] Result: eta=0.277; colsample_bytree=0.954; subsample=0.813 : SQWK.test.mean=0.602
 ####################################################################################################
 # FUNCTION / VARIABLE DECLARTIONS
 ####################################################################################################
@@ -18,12 +19,12 @@ evalerror <- function(preds, dtrain) {
 myObjective       <- "multi:softmax"  # xgb parm... objective... multiclass classification
 myBooster         <- "gbtree"         # xgb parm... type of booster... gbtree 
 # myValSetPCT       <- 20.0              # pct of training set to hold for validation
-myEta             <- 0.05             # xgb parm... smaller = more conservative 0.02
+myEta             <- 0.277             # xgb parm... smaller = more conservative 0.02
 myGamma           <- 0.1              # xgb parm... bigger = more conservative 0.3
 myMaxDepth        <- 6               # xgb parm... bigger = might overfit 15
-mySubsample       <- 0.9              # xgb parm... 0.9 to 0.7 usually good 
-myColSampleByTree <- 0.7              # xgb parm... 0.5 to 0.7 usually good
-myMinChildWeight  <- 240                # xgb parm... bigger = more conservative 3
+mySubsample       <- 0.813              # xgb parm... 0.9 to 0.7 usually good 
+myColSampleByTree <- 0.954              # xgb parm... 0.5 to 0.7 usually good
+myMinChildWeight  <- 50                # xgb parm... bigger = more conservative 3
 myNRounds         <- 700              # xgb parm... bigger = might overfit
 myEarlyStopRound  <- 50               # xgb parm... stop learning early if no increase after this many rounds
 myNThread         <- 3                # num threads to use
@@ -35,8 +36,8 @@ set.seed(1989)
 
 cat("read train and test data...\n")
 # load("data/cleaned_datasets.RData")
-# load("data/cleaned_datasets_imputed.RData")
-load("data/cleaned_datasets_no_encoded.RData")
+load("data/cleaned_datasets_imputed.RData")
+# load("data/cleaned_datasets_no_encoded.RData")
 
 feature.names <- names(train)[2:ncol(train)-1] #132
 

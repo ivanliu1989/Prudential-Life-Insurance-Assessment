@@ -34,10 +34,10 @@ myNThread         <- 3                # num threads to use
 # MAINLINE
 ####################################################################################################
 set.seed(1234)
-
+library(data.table)
 cat("read train and test data...\n")
-train <- read_csv("../input/train.csv")
-test  <- read_csv("../input/test.csv")
+train <- fread("data/train.csv", data.table = F)
+test  <- fread("data/test.csv", data.table = F)
 
 feature.names <- names(train)[2:ncol(train)-1]
 
