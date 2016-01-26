@@ -34,9 +34,11 @@ myNThread         <- 3                # num threads to use
 set.seed(1989)
 
 cat("read train and test data...\n")
-load("data/cleaned_datasets.RData")
+# load("data/cleaned_datasets.RData")
+# load("data/cleaned_datasets_imputed.RData")
+load("data/cleaned_datasets_no_encoded.RData")
 
-feature.names <- names(train)[2:ncol(train)-1]
+feature.names <- names(train)[2:ncol(train)-1] #132
 
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
 train_20$Response = train_20$Response - 1 # train_20, train_10

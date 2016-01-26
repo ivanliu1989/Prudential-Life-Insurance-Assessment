@@ -227,8 +227,8 @@ head(Product_Info_2_split)
 # 7. Imputation #####
 #####################
 for(i in na.features){
-    # total[is.na(total[,i]),i] <- median(total[,i], na.rm = T)
-    total[is.na(total[,i]),i] <- -1
+    total[is.na(total[,i]),i] <- median(total[,i], na.rm = T)
+    # total[is.na(total[,i]),i] <- -1
 }
 sapply(names(total), function(x){mean(is.na(total[,x]))})
 
@@ -332,4 +332,5 @@ inTraining <- createDataPartition(train$Response, p = .8, list = FALSE)
 validation_20 <- train[-inTraining,]
 train_20 <- train[inTraining,]
 
-save(train, test, validation_10, validation_20, train_10, train_20, file = 'data/cleaned_datasets.RData')
+# save(train, test, validation_10, validation_20, train_10, train_20, file = 'data/cleaned_datasets.RData')
+save(train, test, validation_10, validation_20, train_10, train_20, file = 'data/cleaned_datasets_imputed.RData')

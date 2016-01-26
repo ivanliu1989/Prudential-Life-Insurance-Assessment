@@ -51,3 +51,8 @@ Medical_Keyword_1-48 are dummy variables.
 4. mlr
 5. linear regression
 6. 
+
+#### Results
+1. Raw + tsne + kmean + -1 null - 0.545304983686086/0.565425847292581
+2. Raw + -1 null - 0.547655889464964/0.546402606859081
+3. Encoded + tsne + kmean + median null - 0.552005910930349/0.554265566239907
