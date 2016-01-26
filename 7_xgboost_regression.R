@@ -42,7 +42,7 @@ load("data/cleaned_datasets.RData")
 # load("data/cleaned_datasets_imputed.RData")
 # load("data/cleaned_datasets_no_encoded.RData")
 
-feature.names <- names(train)[2:909] #132 ncol(train)-1
+feature.names <- names(train)[2:894] #132 ncol(train)-1
 
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
 # train_20$Response = train_20$Response - 1 # train_20, train_10
@@ -55,18 +55,18 @@ watchlist  <- list(val=dval,train=dtrain)
 cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
                  nrounds             = 1000, 
-                 early.stop.round    = 100,
+                 early.stop.round    = 200,
                  watchlist           = watchlist,
                  feval               = evalerror,
                  maximize            = TRUE,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.2,
+                 eta                 = 0.15,
                  gamma               = 0.05,
-                 max_depth           = 12,
-                 min_child_weight    = 100,
-                 subsample           = 0.9,
+                 max_depth           = 8,
+                 min_child_weight    = 3,
+                 subsample           = 0.8,
                  colsample           = 0.7,
                  print.every.n       = 10
 )
