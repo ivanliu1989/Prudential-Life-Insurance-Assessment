@@ -10,27 +10,42 @@ rm(list=ls());gc()
 ####################################################################################################
 
 # evaluation function that we'll use for "feval" in xgb.train...
-evalerror <- function(preds, dtrain) {
+# evalerror <- function(preds, dtrain) {
+#     labels <- getinfo(dtrain, "label")
+#     err <- ScoreQuadraticWeightedKappa(as.numeric(labels),as.numeric(round(preds)))
+#     return(list(metric = "kappa", value = err))
+# }
+
+evalerror = function(preds, dtrain) {
+    x = seq(1.5, 7.5, by = 1)
     labels <- getinfo(dtrain, "label")
-    err <- ScoreQuadraticWeightedKappa(as.numeric(labels),as.numeric(round(preds)))
+    cuts = c(min(preds), x[1], x[2], x[3], x[4], x[5], x[6], x[7], max(preds))
+    preds = as.numeric(Hmisc::cut2(preds, cuts))
+    err = Metrics::ScoreQuadraticWeightedKappa(as.numeric(labels), preds, 1, 8)
+    return(list(metric = "kappa", value = err))
+}
+
+evalerror2 = function(preds, labels) {
+    x = seq(1.5, 7.5, by = 1)
+    cuts = c(min(preds), x[1], x[2], x[3], x[4], x[5], x[6], x[7], max(preds))
+    preds = as.numeric(Hmisc::cut2(preds, cuts))
+    err = Metrics::ScoreQuadraticWeightedKappa(as.numeric(labels), preds, 1, 8)
     return(list(metric = "kappa", value = err))
 }
 
 # declare these as variables: easier to reuse the script; and many are included in the output filename
-myObjective       <- "multi:softmax"  # xgb parm... objective... multiclass classification
-myBooster         <- "gbtree"         # xgb parm... type of booster... gbtree 
+myObjective       <- "reg:linear" #"multi:softmax"  # xgb parm... objective... multiclass classification
+myBooster         <- "gblinear"         # xgb parm... type of booster... gbtree 
 # myValSetPCT       <- 20.0              # pct of training set to hold for validation
 myEta             <- 0.277             # xgb parm... smaller = more conservative 0.02
 myGamma           <- 0.1              # xgb parm... bigger = more conservative 0.3
-myMaxDepth        <- 8               # xgb parm... bigger = might overfit 15
+myMaxDepth        <- 6               # xgb parm... bigger = might overfit 15
 mySubsample       <- 0.813              # xgb parm... 0.9 to 0.7 usually good 
 myColSampleByTree <- 0.954              # xgb parm... 0.5 to 0.7 usually good
 myMinChildWeight  <- 50                # xgb parm... bigger = more conservative 3
-myNRounds         <- 700              # xgb parm... bigger = might overfit
-myEarlyStopRound  <- 900               # xgb parm... stop learning early if no increase after this many rounds
+myNRounds         <- 500              # xgb parm... bigger = might overfit
+myEarlyStopRound  <- 500               # xgb parm... stop learning early if no increase after this many rounds
 myNThread         <- 3                # num threads to use
-
-# 0.569854581197873
 
 ####################################################################################################
 # MAINLINE
@@ -78,10 +93,12 @@ clf <- xgb.train(params              = param,
                  verbose             = 1
 )
 
+
 # just for keeping track of how things went...
 # run prediction on training set so we can add the value to our output filename
-validPreds <- as.integer(round(predict(clf, data.matrix(validation_20[,feature.names])))) # validation_20, validation_10
+validPreds <- predict(clf, data.matrix(validation_20[,feature.names])) # validation_20, validation_10
 validScore <- ScoreQuadraticWeightedKappa(round(validPreds),validation_20$Response) # validation_20, validation_10
+evalerror2(validPreds, validation_20$Response)
 
 outFileName <- paste("z0.00000 - ",validScore,
                      " - ",clf$bestScore,
