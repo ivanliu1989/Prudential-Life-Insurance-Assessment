@@ -33,34 +33,20 @@ evalerror2 = function(preds, labels) {
     return(list(metric = "kappa", value = err))
 }
 
-# declare these as variables: easier to reuse the script; and many are included in the output filename
-myObjective       <- "reg:linear" #"multi:softmax"  # xgb parm... objective... multiclass classification
-myBooster         <- "gblinear"         # xgb parm... type of booster... gbtree 
-# myValSetPCT       <- 20.0              # pct of training set to hold for validation
-myEta             <- 0.277             # xgb parm... smaller = more conservative 0.02
-myGamma           <- 0.1              # xgb parm... bigger = more conservative 0.3
-myMaxDepth        <- 6               # xgb parm... bigger = might overfit 15
-mySubsample       <- 0.813              # xgb parm... 0.9 to 0.7 usually good 
-myColSampleByTree <- 0.954              # xgb parm... 0.5 to 0.7 usually good
-myMinChildWeight  <- 50                # xgb parm... bigger = more conservative 3
-myNRounds         <- 500              # xgb parm... bigger = might overfit
-myEarlyStopRound  <- 500               # xgb parm... stop learning early if no increase after this many rounds
-myNThread         <- 3                # num threads to use
-
 ####################################################################################################
 # MAINLINE
 ####################################################################################################
 set.seed(1989)
 
 cat("read train and test data...\n")
-# load("data/cleaned_datasets.RData")
-load("data/cleaned_datasets_imputed.RData")
+load("data/cleaned_datasets.RData")
+# load("data/cleaned_datasets_imputed.RData")
 # load("data/cleaned_datasets_no_encoded.RData")
 
-feature.names <- names(train)[2:ncol(train)-1] #132
+feature.names <- names(train)[2:909] #132 ncol(train)-1
 
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
-train_20$Response = train_20$Response - 1 # train_20, train_10
+# train_20$Response = train_20$Response - 1 # train_20, train_10
 
 cat("create dval/dtrain/watchlist...\n")
 dval       <- xgb.DMatrix(data=data.matrix(validation_20[,feature.names]),label=validation_20$Response) # validation_20, validation_10
@@ -68,37 +54,24 @@ dtrain     <- xgb.DMatrix(data=data.matrix(train_20[,feature.names]),label=train
 watchlist  <- list(val=dval,train=dtrain)
 
 cat("running xgboost...\n")
-param <- list(   objective           = myObjective, 
-                 booster             = myBooster,
-                 eta                 = myEta,
-                 max_depth           = myMaxDepth,
-                 subsample           = mySubsample,
-                 colsample_bytree    = myColSampleByTree,
-                 min_child_weight    = myMinChildWeight,
-                 gamma               = myGamma,
-                 # num_parallel_tree   = 2
-                 # alpha               = 0.0001, 
-                 # lambda              = 1,
-                 num_class           = 8,
-                 nthread             = myNThread
-)
-
-clf <- xgb.train(params              = param, 
-                 data                = dtrain, 
-                 nrounds             = myNRounds, 
-                 early.stop.round    = myEarlyStopRound,
+clf <- xgb.train(data                = dtrain, 
+                 nrounds             = 100, 
+                 early.stop.round    = 50,
                  watchlist           = watchlist,
                  feval               = evalerror,
                  maximize            = TRUE,
-                 verbose             = 1
+                 verbose             = 1,
+                 objective           = "reg:linear"
 )
-
 
 # just for keeping track of how things went...
 # run prediction on training set so we can add the value to our output filename
 validPreds <- predict(clf, data.matrix(validation_20[,feature.names])) # validation_20, validation_10
 validScore <- ScoreQuadraticWeightedKappa(round(validPreds),validation_20$Response) # validation_20, validation_10
-evalerror2(validPreds, validation_20$Response)
+evalerror2(validPreds, validation_20$Response) 
+# cleaned_datasets_imputed.RData - 0.5959933
+# cleaned_datasets_no_encoded.RData - 0.5969993
+# cleaned_datasets.RData - 0.5967163 | 0.6047035 (no tsne)
 
 outFileName <- paste("z0.00000 - ",validScore,
                      " - ",clf$bestScore,
