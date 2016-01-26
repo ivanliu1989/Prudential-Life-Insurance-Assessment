@@ -29,7 +29,7 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
     cuts = c(min(preds), x[1], x[2], x[3], x[4], x[5], x[6], x[7], max(preds))
     preds = as.numeric(Hmisc::cut2(preds, cuts))
     err = Metrics::ScoreQuadraticWeightedKappa(as.numeric(labels), preds, 1, 8)
-    return(list(metric = "kappa", value = err))
+    return(-err)
 }
 
 ####################################################################################################
@@ -62,10 +62,10 @@ clf <- xgb.train(data                = dtrain,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.25,
-                 gamma               = 0.1,
-                 max_depth           = 8,
-                 min_child_weight    = 50,
+                 eta                 = 0.2,
+                 gamma               = 0.05,
+                 max_depth           = 12,
+                 min_child_weight    = 100,
                  subsample           = 0.9,
                  colsample           = 0.7,
                  print.every.n       = 10
@@ -75,10 +75,19 @@ clf <- xgb.train(data                = dtrain,
 # run prediction on training set so we can add the value to our output filename
 validPreds <- predict(clf, data.matrix(validation_20[,feature.names])) # validation_20, validation_10
 validScore <- ScoreQuadraticWeightedKappa(round(validPreds),validation_20$Response) # validation_20, validation_10
-evalerror_2(validPreds, validation_20$Response) 
+evalerror_2(preds = validPreds, labels = validation_20$Response) 
+
+# Find optimal cutoff
+library(mlr)
+optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds, labels = validation_20$Response)
+optCuts
+validPredsOptim = as.numeric(Hmisc::cut2(validPreds, c(-Inf, optCuts$par, Inf)))
+table(validPredsOptim)
+evalerror_2(preds = validPredsOptim, labels = validation_20$Response) 
 # cleaned_datasets_imputed.RData - 0.5959
 # cleaned_datasets_no_encoded.RData - 0.5969
 # cleaned_datasets.RData - 0.5967 | 0.6047 (no tsne) | 0.61219
+# optimal cutoff - 0.6442975
 
 outFileName <- paste("z0.00000 - ",validScore,
                      " - ",clf$bestScore,
