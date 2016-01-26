@@ -227,8 +227,8 @@ head(Product_Info_2_split)
 # 7. Imputation #####
 #####################
 for(i in na.features){
-    total[is.na(total[,i]),i] <- median(total[,i], na.rm = T)
-    # total[is.na(total[,i]),i] <- -1
+    # total[is.na(total[,i]),i] <- median(total[,i], na.rm = T)
+    total[is.na(total[,i]),i] <- -1
 }
 sapply(names(total), function(x){mean(is.na(total[,x]))})
 
@@ -306,7 +306,8 @@ fit <- h2o.kmeans(kmeans_df, k = 4, max_iterations = 50000, standardize = T, ini
 pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
 kmeans_all <- pred[,1]; table(kmeans_all)
 
-save(tsne_ALL, tsne_MH, tsne_MK, tsne_PI, tsne_EI, tsne_II, tsne_IH, tsne_FH, tsne_CI, kmeans_all, file = 'data/cleaned_datasets.RData')
+save(tsne_ALL, tsne_MH, tsne_MK, tsne_PI, tsne_EI, tsne_II, tsne_IH, tsne_FH, tsne_CI, kmeans_all, file = 'data/clustering_feats.RData')
+load('data/clustering_feats.RData')
 
 #####################
 # 9. Re-combine #####
