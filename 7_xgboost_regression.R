@@ -42,7 +42,7 @@ load("data/cleaned_datasets.RData")
 # load("data/cleaned_datasets_imputed.RData")
 # load("data/cleaned_datasets_no_encoded.RData")
 
-feature.names <- names(train)[2:894] #132 ncol(train)-1
+feature.names <- names(train)[2:909] #132 ncol(train)-1
 remove.names <- c(grep("Medical_History_10",feature.names),grep("Medical_History_24",feature.names))
 feature.names <- feature.names[-remove.names]
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
@@ -55,8 +55,8 @@ watchlist  <- list(val=dval,train=dtrain)
 
 cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
-                 nrounds             = 1000, 
-                 early.stop.round    = 200,
+                 nrounds             = 2000, 
+                 early.stop.round    = 100,
                  watchlist           = watchlist,
                  feval               = evalerror,
                  maximize            = TRUE,

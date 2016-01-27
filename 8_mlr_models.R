@@ -76,7 +76,7 @@ ps = makeParamSet(
     makeNumericParam("subsample", lower = 1, upper = 2, trafo = function(x) x/2)
 )
 # 2) Use 3-fold Cross-Validation to measure improvements
-rdesc = makeResampleDesc("CV", iters = 3L)
+rdesc = makeResampleDesc("CV", iters = 3, stratify = TRUE)
 # 3) Here we use Random Search (with 10 Iterations) to find the optimal hyperparameter
 ctrl =  makeTuneControlRandom(maxit = 10)
 # 4) now use the learner on the training Task with the 3-fold CV to optimize your set of parameters and evaluate it with SQWK
