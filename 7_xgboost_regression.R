@@ -17,7 +17,8 @@ rm(list=ls());gc()
 # }
 
 evalerror = function(preds, dtrain) {
-    x = seq(1.5, 7.5, by = 1)
+    # x = seq(1.5, 7.5, by = 1)
+    x = c(1.619689, 3.413080, 4.206752, 4.805708, 5.610160, 6.232827, 6.686749)
     labels <- getinfo(dtrain, "label")
     cuts = c(min(preds), x[1], x[2], x[3], x[4], x[5], x[6], x[7], max(preds))
     preds = as.numeric(Hmisc::cut2(preds, cuts))
@@ -43,8 +44,8 @@ cat("read train and test data...\n")
 load("data/cleaned_datasets_no_encoded.RData")
 
 feature.names <- names(train)[2:132] #132 ncol(train)-1
-remove.names <- c(grep("Medical_History_10",feature.names),grep("Medical_History_24",feature.names))
-feature.names <- feature.names[-remove.names]
+# remove.names <- c(grep("Medical_History_10",feature.names),grep("Medical_History_24",feature.names))
+# feature.names <- feature.names[-remove.names]
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
 # train_20$Response = train_20$Response - 1 # train_20, train_10
 
@@ -65,10 +66,10 @@ clf <- xgb.train(data                = dtrain,
                  booster             = "gbtree",
                  eta                 = 0.02,#as.list(c(rep(0.05, 200), rep(0.02, 500))), #0.05, 
                  # gamma               = 0.05,
-                 max_depth           = 6,
-                 min_child_weight    = 150,
+                 max_depth           = 7,
+                 min_child_weight    = 50,
                  subsample           = 0.8,
-                 colsample           = 0.67,
+                 colsample           = 0.8,
                  print.every.n       = 10
                  # num_class           = 8
 )

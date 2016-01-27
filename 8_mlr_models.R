@@ -7,17 +7,17 @@ library(mlr)
 library(data.table)
 source('mlr_xgboost_reg_func.R')
 
-load("data/cleaned_datasets.RData")
+# load("data/cleaned_datasets.RData")
 # load("data/cleaned_datasets_imputed.RData")
-# load("data/cleaned_datasets_no_encoded.RData")
+load("data/cleaned_datasets_no_encoded.RData")
 
 ##################################################################
 # 1.create mlr task and convert factors to dummy features ########
 ##################################################################
-allTask = makeRegrTask(data = train[,-1], target = "Response")
-trainTask = makeRegrTask(data = train_20[,-1], target = "Response")
-validTask = makeRegrTask(data = validation_20[,-1], target = "Response")
-testTask = makeRegrTask(data = test[,-1], target = "Response")
+allTask = makeRegrTask(data = train[,c(2:132,152)], target = "Response")
+trainTask = makeRegrTask(data = train_20[,c(2:132,152)], target = "Response")
+validTask = makeRegrTask(data = validation_20[,c(2:132,152)], target = "Response")
+testTask = makeRegrTask(data = test[,c(2:132,152)], target = "Response")
 
 ##############################
 # 2.create mlr learner #######
@@ -25,21 +25,15 @@ testTask = makeRegrTask(data = test[,-1], target = "Response")
 set.seed(1989)
 lrn = makeLearner("regr.xgboost")
 lrn$par.vals = list(
-    nthread             = 5,
-    nrounds             = 800,
-    print.every.n       = 10,
-    objective           = "reg:linear"
+    #nthread             = 30,
+    nrounds             = 700,
+    print.every.n       = 5,
+    objective           = "reg:linear",
+    depth               = 7,
+    colsample_bytree    = 0.66,
+    min_child_weight    = 150,
+    subsample           = 0.71
 )
-# lrn$par.vals = list(
-#     #nthread             = 30,
-#     nrounds             = 110,
-#     print.every.n       = 5,
-#     objective           = "reg:linear",
-#     depth = 20,
-#     colsample_bytree = 0.66,
-#     min_child_weight = 3,
-#     subsample = 0.71
-# )
 # # missing values will be imputed by their median
 # lrn = makeImputeWrapper(lrn, classes = list(numeric = imputeMedian(), integer = imputeMedian()))
 
@@ -71,12 +65,14 @@ parallelExport("SQWK", "SQWKfun", "trainLearner.regr.xgboost", "predictLearner.r
 ############################
 # 1) Define the set of parameters you want to tune (here 'eta')
 ps = makeParamSet(
-    makeNumericParam("eta", lower = 0.1, upper = 0.3),
+    makeNumericParam("eta", lower = 0.01, upper = 0.2),
     makeNumericParam("colsample_bytree", lower = 1, upper = 2, trafo = function(x) x/2),
-    makeNumericParam("subsample", lower = 1, upper = 2, trafo = function(x) x/2)
+    makeNumericParam("subsample", lower = 1, upper = 2, trafo = function(x) x/2),
+    # makeIntegerParam("depth", lower = 5, upper = 20),
+    makeIntegerParam("min_child_weight", lower = 1, upper = 250)
 )
 # 2) Use 3-fold Cross-Validation to measure improvements
-rdesc = makeResampleDesc("CV", iters = 3, stratify = TRUE)
+rdesc = makeResampleDesc("CV", iters = 3)#, stratify = TRUE)
 # 3) Here we use Random Search (with 10 Iterations) to find the optimal hyperparameter
 ctrl =  makeTuneControlRandom(maxit = 10)
 # 4) now use the learner on the training Task with the 3-fold CV to optimize your set of parameters and evaluate it with SQWK
@@ -98,7 +94,7 @@ tr = train(lrn, trainTask) #allTask
 ## predict validation using the optimal cut-points
 pred = predict(tr, validTask)
 preds = as.numeric(Hmisc::cut2(pred$data$response, c(-Inf, optCuts$par, Inf)))
-Metrics::ScoreQuadraticWeightedKappa(preds, true, 1, 8)
+Metrics::ScoreQuadraticWeightedKappa(preds, pred$data$truth, 1, 8)
 
 ## predict using the optimal cut-points 
 pred = predict(tr, testTask)
