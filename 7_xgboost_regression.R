@@ -43,7 +43,8 @@ load("data/cleaned_datasets.RData")
 # load("data/cleaned_datasets_no_encoded.RData")
 
 feature.names <- names(train)[2:894] #132 ncol(train)-1
-
+remove.names <- c(grep("Medical_History_10",feature.names),grep("Medical_History_24",feature.names))
+feature.names <- feature.names[-remove.names]
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
 # train_20$Response = train_20$Response - 1 # train_20, train_10
 
@@ -62,12 +63,12 @@ clf <- xgb.train(data                = dtrain,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.15,
-                 gamma               = 0.05,
-                 max_depth           = 8,
-                 min_child_weight    = 3,
-                 subsample           = 0.8,
-                 colsample           = 0.7,
+                 eta                 = 0.05,
+                 # gamma               = 0.05,
+                 max_depth           = 6,
+                 min_child_weight    = 240,
+                 subsample           = 1,
+                 colsample           = 0.67,
                  print.every.n       = 10
 )
 
