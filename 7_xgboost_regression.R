@@ -38,11 +38,11 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 set.seed(1989)
 
 cat("read train and test data...\n")
-load("data/cleaned_datasets.RData")
+# load("data/cleaned_datasets.RData")
 # load("data/cleaned_datasets_imputed.RData")
-# load("data/cleaned_datasets_no_encoded.RData")
+load("data/cleaned_datasets_no_encoded.RData")
 
-feature.names <- names(train)[2:909] #132 ncol(train)-1
+feature.names <- names(train)[2:132] #132 ncol(train)-1
 remove.names <- c(grep("Medical_History_10",feature.names),grep("Medical_History_24",feature.names))
 feature.names <- feature.names[-remove.names]
 # response values are in the range [1:8] ... make it [0:7] for xgb softmax....
@@ -55,21 +55,22 @@ watchlist  <- list(val=dval,train=dtrain)
 
 cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
-                 nrounds             = 2000, 
-                 early.stop.round    = 100,
+                 nrounds             = 10000, 
+                 early.stop.round    = 200,
                  watchlist           = watchlist,
                  feval               = evalerror,
                  maximize            = TRUE,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.05,
+                 eta                 = 0.02,#as.list(c(rep(0.05, 200), rep(0.02, 500))), #0.05, 
                  # gamma               = 0.05,
                  max_depth           = 6,
-                 min_child_weight    = 240,
-                 subsample           = 1,
+                 min_child_weight    = 150,
+                 subsample           = 0.8,
                  colsample           = 0.67,
                  print.every.n       = 10
+                 # num_class           = 8
 )
 
 # just for keeping track of how things went...
@@ -80,7 +81,8 @@ evalerror_2(preds = validPreds, labels = validation_20$Response)
 
 # Find optimal cutoff
 library(mlr)
-optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds, labels = validation_20$Response)
+optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds, labels = validation_20$Response, 
+                method = 'Nelder-Mead', control = list(maxit = 30000, trace = TRUE, REPORT = 500))
 optCuts
 validPredsOptim = as.numeric(Hmisc::cut2(validPreds, c(-Inf, optCuts$par, Inf)))
 table(validPredsOptim)
@@ -88,7 +90,8 @@ evalerror_2(preds = validPredsOptim, labels = validation_20$Response)
 # cleaned_datasets_imputed.RData - 0.5959
 # cleaned_datasets_no_encoded.RData - 0.5969
 # cleaned_datasets.RData - 0.5967 | 0.6047 (no tsne) | 0.61219
-# optimal cutoff - 0.6442975
+# optimal cutoff: 
+# 1. 0.6562269 min_child_weight=240, eta=0.05, nrounds=700, max_depth=6, subsample=1, colsample=0.67
 
 outFileName <- paste("z0.00000 - ",validScore,
                      " - ",clf$bestScore,

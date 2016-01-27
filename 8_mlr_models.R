@@ -92,13 +92,13 @@ parallelStop()
 optCuts = optim(seq(1.5, 7.5, by = 1), SQWKfun, pred = cv$pred)
 optCuts
 
+## now train the model on all training data
+tr = train(lrn, trainTask) #allTask
+
 ## predict validation using the optimal cut-points
 pred = predict(tr, validTask)
 preds = as.numeric(Hmisc::cut2(pred$data$response, c(-Inf, optCuts$par, Inf)))
 Metrics::ScoreQuadraticWeightedKappa(preds, true, 1, 8)
-
-## now train the model on all training data
-tr = train(lrn, allTask)
 
 ## predict using the optimal cut-points 
 pred = predict(tr, testTask)
