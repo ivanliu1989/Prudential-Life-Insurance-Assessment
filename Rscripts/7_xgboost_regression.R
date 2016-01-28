@@ -57,7 +57,7 @@ watchlist  <- list(val=dval,train=dtrain)
 
 cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
-                 nrounds             = 500, 
+                 nrounds             = 800, 
                  early.stop.round    = 200,
                  watchlist           = watchlist,
                  # feval               = evalerror,
@@ -66,10 +66,10 @@ clf <- xgb.train(data                = dtrain,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.2,
+                 eta                 = 0.045,
                  # gamma               = 0.05,
-                 max_depth           = 7,
-                 min_child_weight    = 50,
+                 max_depth           = 16,
+                 min_child_weight    = 150,
                  subsample           = 0.8,
                  colsample           = 0.7,
                  print.every.n       = 10
