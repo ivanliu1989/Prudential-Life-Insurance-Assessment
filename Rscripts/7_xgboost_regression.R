@@ -17,11 +17,12 @@ rm(list=ls());gc()
 # }
 
 evalerror = function(preds, dtrain) {
-    # x = seq(1.5, 7.5, by = 1)
-    x = c(1.619689, 3.413080, 4.206752, 4.805708, 5.610160, 6.232827, 6.686749)
+    x = seq(1.5, 7.5, by = 1)
+    # x = c(1.619689, 3.413080, 4.206752, 4.805708, 5.610160, 6.232827, 6.686749)
     labels <- getinfo(dtrain, "label")
     cuts = c(min(preds), x[1], x[2], x[3], x[4], x[5], x[6], x[7], max(preds))
-    preds = as.numeric(Hmisc::cut2(preds, cuts))
+    # preds = as.numeric(cut(preds,8))
+    as.numeric(Hmisc::cut2(preds, cuts))
     err = Metrics::ScoreQuadraticWeightedKappa(as.numeric(labels), preds, 1, 8)
     return(list(metric = "kappa", value = err))
 }
@@ -36,7 +37,7 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 ####################################################################################################
 # MAINLINE
 ####################################################################################################
-set.seed(1989)
+set.seed(23)
 
 cat("read train and test data...\n")
 # load("data/cleaned_datasets.RData")
@@ -56,20 +57,21 @@ watchlist  <- list(val=dval,train=dtrain)
 
 cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
-                 nrounds             = 10000, 
+                 nrounds             = 500, 
                  early.stop.round    = 200,
                  watchlist           = watchlist,
-                 feval               = evalerror,
-                 maximize            = TRUE,
+                 # feval               = evalerror,
+                 eval_metric         = 'rmse',
+                 maximize            = F,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.02,#as.list(c(rep(0.05, 200), rep(0.02, 500))), #0.05, 
+                 eta                 = 0.2,
                  # gamma               = 0.05,
                  max_depth           = 7,
                  min_child_weight    = 50,
                  subsample           = 0.8,
-                 colsample           = 0.8,
+                 colsample           = 0.7,
                  print.every.n       = 10
                  # num_class           = 8
 )

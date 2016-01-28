@@ -1,13 +1,13 @@
 setwd('/Users/ivanliu/Downloads/Prudential-Life-Insurance-Assessment')
 rm(list=ls()); gc()
 library(data.table); library(dplyr); library(ggplot2)
-train <- fread('data/train.csv')
-test <- fread('data/test.csv')
+train <- fread('data/train.csv', data.table = F)
+test <- fread('data/test.csv', data.table = F)
 submission <- fread('data/sample_submission.csv')
 
 # 1. basic 
 dim(train);dim(test)
-View(train)
+# View(train)
 
 #Those considered as no binary:
 train=dplyr::filter(train, Product_Info_7!=2)
@@ -52,11 +52,17 @@ for (f in feat.bin) {
     train[[f]] <- as.integer(factor(train[[f]], levels=levels))-1
     test[[f]]  <- as.integer(factor(test[[f]],  levels=levels))-1
 }
+for (f in feat.cat) {
+    levels <- unique(c(train[[f]], test[[f]]))
+    train[[f]] <- as.integer(factor(train[[f]], levels=levels))-1
+    test[[f]]  <- as.integer(factor(test[[f]],  levels=levels))-1
+}
 
 # Now, lets explore predictability for each feature:
 response=train$Response
 scores.grid <- expand.grid(columns = 1:ncol(test), score = NA)
 
+library(caret)
 for (i in 1:ncol(test)) {
     feat=names(test)[i]
     temp=data.frame(train[, feat])
@@ -67,7 +73,6 @@ for (i in 1:ncol(test)) {
     #p=predict(a, train)
     scores.grid[i, 2]=mean(a$results[,"RMSE"])
     cat(mean(a$results[,"RMSE"]), "") 
-    
 }
 
 # Now that we have calculated the rmse score for each feature, we plot it:
@@ -95,6 +100,7 @@ data$Family_Hist_2=ifelse(data$Family_Hist_2 >mean(data$Family_Hist_2, na.rm=T),
 data$Medical_History_15=ifelse(data$Medical_History_15 >mean(data$Medical_History_15, na.rm=T), 1, 0)
 data$Medical_History_24=ifelse(data$Medical_History_24 >mean(data$Medical_History_24, na.rm=T), 1, 0)
 
+library(reshape2)
 data <- melt(data, id.vars="Response")
 colnames(data)[2:3]=c("Feature", "Value")
 
