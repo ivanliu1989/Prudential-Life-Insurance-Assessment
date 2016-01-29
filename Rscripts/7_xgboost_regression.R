@@ -57,8 +57,8 @@ watchlist  <- list(val=dval,train=dtrain)
 
 cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
-                 nrounds             = 1000, 
-                 early.stop.round    = 200,
+                 nrounds             = 1650, 
+                 early.stop.round    = 2000,
                  watchlist           = watchlist,
                  # feval               = evalerror,
                  eval_metric         = 'rmse',
@@ -66,10 +66,10 @@ clf <- xgb.train(data                = dtrain,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.02,
+                 eta                 = 0.015,
                  # gamma               = 0.05,
                  max_depth           = 6,
-                 min_child_weight    = 50,
+                 min_child_weight    = 3,
                  subsample           = 0.7,
                  colsample           = 0.7,
                  print.every.n       = 10
@@ -95,6 +95,7 @@ evalerror_2(preds = validPredsOptim, labels = validation_20$Response)
 # cleaned_datasets.RData - 0.5967 | 0.6047 (no tsne) | 0.61219
 # optimal cutoff: 
 # 1. 0.6562269 min_child_weight=240, eta=0.05, nrounds=700, max_depth=6, subsample=1, colsample=0.67
+# 2. 0.6601624 min_child_weight=50, eta=0.015, nrounds=3000, max_depth=6, subsample=0.7, colsample=0.7 ~1650 ITERATIONS
 
 outFileName <- paste("z0.00000 - ",validScore,
                      " - ",clf$bestScore,
