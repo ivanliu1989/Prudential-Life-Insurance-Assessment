@@ -46,8 +46,8 @@ eta_list = [0.05] * 250
 eta_list = eta_list + [0.02] * 450 
 
 print("Load the data using pandas")
-train = pd.read_csv("data/train.csv")
-test = pd.read_csv("data/test.csv")
+train = pd.read_csv("../data/train.csv")
+test = pd.read_csv("../data/test.csv")
 
 # combine train and test
 all_data = train.append(test)

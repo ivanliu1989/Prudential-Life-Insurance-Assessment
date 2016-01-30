@@ -24,3 +24,12 @@ train$NewFeature1 <- ifelse(train$Family_Hist_3>=0 & is.na(train$Family_Hist_2),
 # 11. High correlation
 
 # 12. Stacking results (methods/objective functions)
+
+# 13. optim cut-offs after all the stacking, blending and other tricks
+
+# 14. split the training data into two parts: A and B. 
+# Train on part A and then predict on part B. Train on part B and then predict on part A.
+# Combine the predictions on A and B. 
+# Use optim to get cutpoints based on the true training labels and your predictions
+
+# 15. Bayesian Optimization
