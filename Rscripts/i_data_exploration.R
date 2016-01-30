@@ -157,18 +157,9 @@ str(train[,num.features]); str(train[,cate.features])
 #####################################
           # 5. Model strategies #####  GOTO ii_modeling.R
           ###########################
-# 1. split the training data into two parts: A and B. 
-# Train on part A and then predict on part B. Train on part B and then predict on part A.
-# Combine the predictions on A and B. 
-# Use optim to get cutpoints based on the true training labels and your predictions
+library(Rtsne)
+feature.names <- names(total_new)[-c(1, ncol(total_new))]
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+embedding <- as.data.frame(tsne$Y)
+tsne_ALL <- embedding[,1:2]; names(tsne_ALL) <- c('TSNE_ALL_1','TSNE_ALL_2')
 
-# 2. Staked generalization
-# fit train_a and predict on train_b
-# fit train_b and predict on train_a
-# fit entire train and predict on test
-# fit 2nd stack by train on entire train + predictions and predict on test
-
-# 3. Stacking results (methods/objective functions)
-
-# 4. optim cut-offs after all the stacking, blending and other tricks
-# 5. Bayesian Optimization

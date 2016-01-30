@@ -1,0 +1,10 @@
+# A, B
+# A->B
+# B->A
+# ALL_PRED -> NEW FEAT
+# 
+# 1. TSNE
+# 2. One-hot/PCA
+# 3. OBJECTIVES (RMSE + KAPPA)
+# 4. H2O + XGBOOST
+# 5. META FEAT (XGBOOST + H2O)
