@@ -155,7 +155,7 @@ str(train[,num.features]); str(train[,cate.features])
 
 
 #####################################
-          # 5. Model strategies #####
+          # 5. Model strategies #####  GOTO ii_modeling.R
           ###########################
 # 1. split the training data into two parts: A and B. 
 # Train on part A and then predict on part B. Train on part B and then predict on part A.
