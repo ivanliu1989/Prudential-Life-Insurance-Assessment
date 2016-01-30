@@ -157,19 +157,18 @@ str(train[,num.features]); str(train[,cate.features])
 #####################################
           # 5. Model strategies #####
           ###########################
-# 12. Stacking results (methods/objective functions)
-
-# 13. optim cut-offs after all the stacking, blending and other tricks
-
-# 14. split the training data into two parts: A and B. 
+# 1. split the training data into two parts: A and B. 
 # Train on part A and then predict on part B. Train on part B and then predict on part A.
 # Combine the predictions on A and B. 
 # Use optim to get cutpoints based on the true training labels and your predictions
 
-# 15. Bayesian Optimization
-
-# 16. Staked generalization
+# 2. Staked generalization
 # fit train_a and predict on train_b
 # fit train_b and predict on train_a
 # fit entire train and predict on test
 # fit 2nd stack by train on entire train + predictions and predict on test
+
+# 3. Stacking results (methods/objective functions)
+
+# 4. optim cut-offs after all the stacking, blending and other tricks
+# 5. Bayesian Optimization
