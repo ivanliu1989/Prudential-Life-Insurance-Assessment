@@ -41,7 +41,9 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 # Combine the predictions on A and B. 
 # Use optim to get cutpoints based on the true training labels and your predictions
 set.seed(23)
-dropitems <- c('Id','Response','Medical_History_1','Cnt_NA_Emp_row','Cnt_NA_Fam_row','Cnt_NA_Medi_row','Cnt_NA_Ins_row','Gender_Speci_feat')
+dropitems <- c('Id','Response',#'Medical_History_10','Medical_History_24',
+               'Cnt_NA_Emp_row','Cnt_NA_Fam_row','Cnt_NA_Medi_row','Cnt_NA_Ins_row',
+               'Gender_Speci_feat')
 feature.names <- names(train)[!names(train) %in% dropitems] 
 dval          <- xgb.DMatrix(data=data.matrix(validation[,feature.names]),label=validation$Response) 
 dtrain        <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response) 
@@ -58,18 +60,18 @@ clf <- xgb.train(data                = dtrain,
                  watchlist           = watchlist,
                  # watchlist           = watchlist_ab,
                  # watchlist           = watchlist_ba,
-                 feval               = evalerror,
-                 # eval_metric         = 'rmse',
-                 maximize            = TRUE,
+                 # feval               = evalerror,
+                 eval_metric         = 'rmse',
+                 maximize            = FALSE,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
                  eta                 = 0.03,
                  # gamma               = 0.05,
                  max_depth           = 6,
-                 min_child_weight    = 3,
-                 subsample           = 0.7,
-                 colsample           = 1,
+                 min_child_weight    = 10,
+                 subsample           = 0.9,
+                 colsample           = 0.67,
                  print.every.n       = 10
 )
 
