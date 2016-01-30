@@ -21,7 +21,7 @@ par(mfcol = c(1,1))
 # i. Product Info 1-7
 table(train$Product_Info_1); table(test$Product_Info_1) # Categorical - 2
 table(train$Product_Info_2); table(test$Product_Info_2) # Categorical - 19
-table(train$Product_Info_3); table(test$Product_Info_3) # Categorical - 38 <====================== !! 1/3/5/7/12/13/16/18/20/22/27/32/38
+table(train$Product_Info_3); table(test$Product_Info_3) # Categorical - 38 <====================== !! 1,3,5,7,12,13,16,18,20,22,27,32,38
 table(train$Product_Info_4); table(test$Product_Info_4) # Numerical (Continuous)
 table(train$Product_Info_5); table(test$Product_Info_5) # Categorical - 2
 table(train$Product_Info_6); table(test$Product_Info_6) # Categorical - 2
