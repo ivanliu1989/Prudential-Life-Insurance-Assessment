@@ -76,10 +76,10 @@ def xgboostcv(max_depth,
                                          subsample = subsample,
                                          colsample_bytree = colsample_bytree,
                                          seed = seed,
-                                         objective = "multi:softprob"),
+                                         objective = "reg:linear"),
                            train,
                            labels,
-                           "log_loss",
+                           "mean_squared_error",
                            cv=5).mean()   
 
 train, test, labels = load_data()
