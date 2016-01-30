@@ -91,6 +91,7 @@ Product_Info_2_num <- substr(total$Product_Info_2, 2,2)
 Gender_Speci_feat <- NA
 Gender_Speci_feat <- ifelse(total$Family_Hist_2>=0 & is.na(total$Family_Hist_3), 1, Gender_Speci_feat)
 Gender_Speci_feat <- ifelse(total$Family_Hist_3>=0 & is.na(total$Family_Hist_2), 0, Gender_Speci_feat)
+Gender_Speci_feat[is.na(Gender_Speci_feat)] <- -1
 
 # 7. imputation
 for(i in na.features){
@@ -104,6 +105,7 @@ sapply(names(total), function(x){mean(is.na(total[,x]))})
 cate.features <- c(cate.features, 'Product_Info_2_cate', 'Product_Info_2_num', 'Gender_Speci_feat')
 num.features <- names(total)[!names(total) %in% c(cate.features, 'Id', 'Response', medical.keywords)]
 
+load('data/i_test_feats.RData')
 total_new <- cbind(total[,-which(names(total) %in% c('Response'))],  
                    Cnt_NA_row = Cnt_NA_row,
                    Cnt_NA_Emp_row = Cnt_NA_Emp_row,
@@ -115,6 +117,7 @@ total_new <- cbind(total[,-which(names(total) %in% c('Response'))],
                    Product_Info_2_cate = Product_Info_2_cate,
                    Product_Info_2_num = Product_Info_2_num,
                    Gender_Speci_feat = Gender_Speci_feat,
+                   tsne_ALL,
                    Response = total$Response)
 for(c in cate.features){
     total_new[,c] <- as.factor(total_new[,c])
@@ -124,6 +127,7 @@ for(n in num.features){
     total_new[,n] <- as.numeric(total_new[,n])
 }
 str(total_new[,num.features])
+sapply(names(total_new), function(x){mean(is.na(total_new[,x]))})
 
 ######################################
           # 4. Split/Output Data #####
@@ -153,13 +157,57 @@ dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
 save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation.RData')
 str(train[,num.features]); str(train[,cate.features])
 
+#######################################
+          # 5. One - hot encoding #####
+          #############################
+total_new <- cbind(data.frame(model.matrix(Response~.-1,total_new)), Response = total_new$Response)
+head(total_new);dim(total_new)
 
-#####################################
-          # 5. Model strategies #####  GOTO ii_modeling.R
-          ###########################
+# train <- total_new[total_new$Response != 9, ]
+# test <- total_new[total_new$Response == 9, ]
+# library(caret)
+# set.seed(1989)
+# # Validation
+# inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
+# validation <- train[inTraining,]
+# # Train a & b
+# train <- train[-inTraining,]
+# inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+# train_a <- train[-inTraining,]
+# train_b <- train[inTraining,]
+# 
+# dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
+# save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_onehot.RData')
+
+#################################
+          # 6. tsne feature #####
+          #######################
 library(Rtsne)
 feature.names <- names(total_new)[-c(1, ncol(total_new))]
 tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
 embedding <- as.data.frame(tsne$Y)
 tsne_ALL <- embedding[,1:2]; names(tsne_ALL) <- c('TSNE_ALL_1','TSNE_ALL_2')
+save(tsne_ALL, file = 'data/i_test_feats.RData')
 
+#################################
+         # 7. pca transform #####
+         ########################
+preProcValues <- preProcess(total_new[,-c(1,ncol(total_new))], method = c("pca"))
+total_pca <- predict(preProcValues, total_new[,-c(1,ncol(total_new))])
+total_pca <- cbind(Id = total_new$Id, total_pca, Response = total_new$Response)
+
+train <- total_pca[total_pca$Response != 9, ]
+test <- total_pca[total_pca$Response == 9, ]
+library(caret)
+set.seed(1989)
+# Validation
+inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
+validation <- train[inTraining,]
+# Train a & b
+train <- train[-inTraining,]
+inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+train_a <- train[-inTraining,]
+train_b <- train[inTraining,]
+
+dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
+save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_pca.RData')

@@ -8,9 +8,10 @@ rm(list=ls());gc()
 ##############################
           # 1. Read Data #####
           ####################
-load('data/fin_train_test_validation.RData')
+# load('data/fin_train_test_validation.RData')
 # load('data/fin_train_test.RData')
-
+# load('data/fin_train_test_validation_onehot.RData')
+load('data/fin_train_test_validation_pca.RData')
 ##############################
           # 2. Eval Func #####
           ####################
@@ -41,9 +42,11 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 # Combine the predictions on A and B. 
 # Use optim to get cutpoints based on the true training labels and your predictions
 set.seed(23)
-dropitems <- c('Id','Response',#'Medical_History_10','Medical_History_24',
-               #'Cnt_NA_Emp_row','Cnt_NA_Fam_row','Cnt_NA_Medi_row','Cnt_NA_Ins_row',
-               'Gender_Speci_feat')
+dropitems <- c('Id','Response'#'Medical_History_10','Medical_History_24',
+               # 'Cnt_NA_Emp_row','Cnt_NA_Fam_row','Cnt_NA_Medi_row','Cnt_NA_Ins_row'
+               # 'Gender_Speci_feat'
+               # , 'TSNE_ALL_1', 'TSNE_ALL_2'
+               )
 feature.names <- names(train)[!names(train) %in% dropitems] 
 dval          <- xgb.DMatrix(data=data.matrix(validation[,feature.names]),label=validation$Response) 
 dtrain        <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response) 
@@ -58,9 +61,9 @@ clf <- xgb.train(data                = dtrain, # dtrain_a, dtrain_b, dtrain, dtr
                  nrounds             = 800, 
                  early.stop.round    = 200,
                  watchlist           = watchlist, # watchlist_ab, watchlist_ba, watchlist, watchlist_stack
-                 # feval               = evalerror,
-                 eval_metric         = 'rmse',
-                 maximize            = FALSE,
+                 feval               = evalerror,
+                 # eval_metric         = 'rmse',
+                 maximize            = TRUE,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
@@ -85,6 +88,8 @@ optCuts
 validPredsOptim = as.numeric(Hmisc::cut2(validPreds, c(-Inf, optCuts$par, Inf))); table(validPredsOptim)
 evalerror_2(preds = validPredsOptim, labels = validation$Response)
 # VALIDATION-TRAIN: 0.6143617/0.6602325
+# 0.6128556/0.6553111 tsne
+# 0.6129287/0.6553886 no tsne
 
 ### Feature Importance
 names <- dimnames(as.matrix(train[,feature.names]))[[2]]
