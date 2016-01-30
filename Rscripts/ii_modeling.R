@@ -41,7 +41,8 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 # Combine the predictions on A and B. 
 # Use optim to get cutpoints based on the true training labels and your predictions
 set.seed(23)
-feature.names <- names(train)[2:ncol(train)-1]
+dropitems <- c('Id','Response','Medical_History_1','Cnt_NA_Emp_row','Cnt_NA_Fam_row','Cnt_NA_Medi_row','Cnt_NA_Ins_row','Gender_Speci_feat')
+feature.names <- names(train)[!names(train) %in% dropitems] 
 dval          <- xgb.DMatrix(data=data.matrix(validation[,feature.names]),label=validation$Response) 
 dtrain        <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response) 
 dtrain_a      <- xgb.DMatrix(data=data.matrix(train_a[,feature.names]),label=train_a$Response) 
@@ -51,9 +52,8 @@ watchlist     <- list(val=dval,train=dtrain)
 watchlist_ab  <- list(val=dtrain_b,train=dtrain_a)
 watchlist_ba  <- list(val=dtrain_a,train=dtrain_b)
 
-cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
-                 nrounds             = 2000, 
+                 nrounds             = 700, 
                  early.stop.round    = 200,
                  watchlist           = watchlist,
                  # watchlist           = watchlist_ab,
@@ -64,27 +64,36 @@ clf <- xgb.train(data                = dtrain,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.015,
+                 eta                 = 0.03,
                  # gamma               = 0.05,
                  max_depth           = 6,
-                 min_child_weight    = 150,
+                 min_child_weight    = 3,
                  subsample           = 0.7,
-                 colsample           = 0.7,
+                 colsample           = 1,
                  print.every.n       = 10
 )
 
-# Make predictions
+### Make predictions
 validPreds <- predict(clf, data.matrix(validation[,feature.names])) 
 validScore <- ScoreQuadraticWeightedKappa(round(validPreds),validation$Response)
 evalerror_2(preds = validPreds, labels = validation$Response)  
-# Find optimal cutoff
+### Find optimal cutoff
 library(mlr)
 optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds, labels = validation$Response, 
                 method = 'Nelder-Mead', control = list(maxit = 30000, trace = TRUE, REPORT = 500))
 optCuts
 validPredsOptim = as.numeric(Hmisc::cut2(validPreds, c(-Inf, optCuts$par, Inf))); table(validPredsOptim)
 evalerror_2(preds = validPredsOptim, labels = validation$Response)
-# VALIDATION-TRAIN: 0.6119225/0.6559793
+# VALIDATION-TRAIN: 0.6095754/0.6597905
+
+### Feature Importance
+# Get the feature real names
+names <- dimnames(as.matrix(train[,feature.names]))[[2]]
+# Compute feature importance matrix
+importance_matrix <- xgb.importance(names, model = clf)
+# Nice graph
+xgb.plot.importance(importance_matrix)
+
 
 # 2. Staked generalization
 # fit train_a and predict on train_b
