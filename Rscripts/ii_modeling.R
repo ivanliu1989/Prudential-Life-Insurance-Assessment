@@ -16,10 +16,8 @@ load('data/fin_train_test.RData')
           ####################
 evalerror = function(preds, dtrain) {
     x = seq(1.5, 7.5, by = 1)
-    # x = c(1.619689, 3.413080, 4.206752, 4.805708, 5.610160, 6.232827, 6.686749)
     labels <- getinfo(dtrain, "label")
     cuts = c(min(preds), x[1], x[2], x[3], x[4], x[5], x[6], x[7], max(preds))
-    # preds = as.numeric(cut(preds,8))
     as.numeric(Hmisc::cut2(preds, cuts))
     err = Metrics::ScoreQuadraticWeightedKappa(as.numeric(labels), preds, 1, 8)
     return(list(metric = "kappa", value = err))
@@ -33,29 +31,33 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 }
 
 #####################################
-# 3. Model strategies #####  GOTO ii_modeling.R
-###########################
+          # 3. Model strategies ##### 
+          ###########################
 # 1. split the training data into two parts: A and B. 
 # Train on part A and then predict on part B. Train on part B and then predict on part A.
 # Combine the predictions on A and B. 
 # Use optim to get cutpoints based on the true training labels and your predictions
 set.seed(19890624)
 feature.names <- names(train)[2:ncol(train)-1]
-dval       <- xgb.DMatrix(data=data.matrix(validation[,feature.names]),label=validation$Response) # validation_20, validation_10
-dtrain     <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response) # train_20, train_10
-dtrain_a   <- xgb.DMatrix(data=data.matrix(train_a[,feature.names]),label=train_a$Response) # train_20, train_10
-dtrain_b   <- xgb.DMatrix(data=data.matrix(train_b[,feature.names]),label=train_b$Response) # train_20, train_10
-dtest      <- xgb.DMatrix(data=data.matrix(test[,feature.names]),label=test$Response) # train_20, train_10
-watchlist  <- list(val=dval,train=dtrain)
+dval          <- xgb.DMatrix(data=data.matrix(validation[,feature.names]),label=validation$Response) 
+dtrain        <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response) 
+dtrain_a      <- xgb.DMatrix(data=data.matrix(train_a[,feature.names]),label=train_a$Response) 
+dtrain_b      <- xgb.DMatrix(data=data.matrix(train_b[,feature.names]),label=train_b$Response) 
+dtest         <- xgb.DMatrix(data=data.matrix(test[,feature.names]),label=test$Response)
+watchlist     <- list(val=dval,train=dtrain)
+watchlist_ab  <- list(val=dtrain_b,train=dtrain_a)
+watchlist_ba  <- list(val=dtrain_a,train=dtrain_b)
 
 cat("running xgboost...\n")
 clf <- xgb.train(data                = dtrain, 
                  nrounds             = 1650, 
-                 early.stop.round    = 2000,
+                 early.stop.round    = 100,
                  watchlist           = watchlist,
+                 # watchlist           = watchlist_ab,
+                 # watchlist           = watchlist_ba,
                  # feval               = evalerror,
                  eval_metric         = 'rmse',
-                 maximize            = F,
+                 maximize            = FALSE,
                  verbose             = 1,
                  objective           = "reg:linear",
                  booster             = "gbtree",
@@ -68,21 +70,18 @@ clf <- xgb.train(data                = dtrain,
                  print.every.n       = 10
 )
 
-# just for keeping track of how things went...
-# run prediction on training set so we can add the value to our output filename
-validPreds <- predict(clf, data.matrix(validation_20[,feature.names])) # validation_20, validation_10
-validScore <- ScoreQuadraticWeightedKappa(round(validPreds),validation_20$Response) # validation_20, validation_10
-evalerror_2(preds = validPreds, labels = validation_20$Response) 
-
+# Make predictions
+validPreds <- predict(clf, data.matrix(validation[,feature.names])) 
+validScore <- ScoreQuadraticWeightedKappa(round(validPreds),validation$Response)
+evalerror_2(preds = validPreds, labels = validation$Response)  # 0.7573752
 # Find optimal cutoff
 library(mlr)
-optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds, labels = validation_20$Response, 
+optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds, labels = validation$Response, 
                 method = 'Nelder-Mead', control = list(maxit = 30000, trace = TRUE, REPORT = 500))
 optCuts
-validPredsOptim = as.numeric(Hmisc::cut2(validPreds, c(-Inf, optCuts$par, Inf)))
-table(validPredsOptim)
-evalerror_2(preds = validPredsOptim, labels = validation_20$Response) 
-
+validPredsOptim = as.numeric(Hmisc::cut2(validPreds, c(-Inf, optCuts$par, Inf))); table(validPredsOptim)
+evalerror_2(preds = validPredsOptim, labels = validation$Response) # 0.8112775
+# VALIDATION-TRAIN: 0.7573752/0.8112775
 
 # 2. Staked generalization
 # fit train_a and predict on train_b
@@ -95,3 +94,6 @@ evalerror_2(preds = validPredsOptim, labels = validation_20$Response)
 # 4. optim cut-offs after all the stacking, blending and other tricks
 # 5. Bayesian Optimization
 
+testPreds <- predict(clf, data.matrix(test[,feature.names])) 
+testPredsOptim = as.numeric(Hmisc::cut2(testPreds, c(-Inf, optCuts$par, Inf))); table(testPredsOptim)
+head(as.data.frame(cbind(Id = test$Id, Response = testPredsOptim)), 20)
