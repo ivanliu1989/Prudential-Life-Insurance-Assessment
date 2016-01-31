@@ -5,7 +5,7 @@
 # 
 # 1. TSNE & features X
 # 2. One-hot/PCA X
-# 3. OBJECTIVES (RMSE + KAPPA)
+# 3. OBJECTIVES (RMSE + KAPPA) Y
 # 4. H2O + XGBOOST
 # 5. META FEAT (XGBOOST + H2O)
 
@@ -32,11 +32,11 @@
 ##############
 ### STEP 1 ###
 ##############
-# 6. Stacking unsupervised learned features
-# K-Means clustering is a popular technique that makes sense here. 
-# Another more recent interesting addition is to use t-SNE: 
-# Reduce the dataset to 2 or 3 dimensions and stack this with a non-linear stacker. 
-# Using a holdout set for stacking/blending feels like the safest choice here.
+    # 6. Stacking unsupervised learned features
+    # K-Means clustering is a popular technique that makes sense here. 
+    # Another more recent interesting addition is to use t-SNE: 
+    # Reduce the dataset to 2 or 3 dimensions and stack this with a non-linear stacker. 
+    # Using a holdout set for stacking/blending feels like the safest choice here.
 
 # 8. Feature 
 # Correlation distance
@@ -61,3 +61,13 @@
 # 2. Weighing (Voting ensemble)
 # Count the vote by the best model 3 times
 # The other models for one vote each
+
+
+
+
+
+
+1. OBJECTIVES
+2. CLASSIFICATION PROB
+3. XGBOOST + H2O
+4. BLENDING

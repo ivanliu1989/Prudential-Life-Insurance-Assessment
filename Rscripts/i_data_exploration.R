@@ -27,8 +27,9 @@ cate.features <- c("Product_Info_1", "Product_Info_2", "Product_Info_3", "Produc
                    "Medical_History_25", "Medical_History_26", "Medical_History_27", "Medical_History_28", "Medical_History_29", 
                    "Medical_History_30", "Medical_History_31", "Medical_History_33", "Medical_History_34", "Medical_History_35", 
                    "Medical_History_36", "Medical_History_37", "Medical_History_38", "Medical_History_39", "Medical_History_40", 
-                   "Medical_History_41"
-                   )
+                   "Medical_History_41",
+                   "KMEANS"
+)
 medical.keywords <- c(paste('Medical_Keyword_', 1:48, sep = ''))
 
 head(train[,na.features]) # all Numerical (Continuous) or Numerical (Discrete) - 240 
@@ -95,8 +96,8 @@ Gender_Speci_feat[is.na(Gender_Speci_feat)] <- -1
 
 # 7. imputation
 for(i in na.features){
-    # total[is.na(total[,i]),i] <- median(total[,i], na.rm = T)
-    total[is.na(total[,i]),i] <- -1
+    total[is.na(total[,i]),i] <- median(total[,i], na.rm = T)
+    # total[is.na(total[,i]),i] <- -1
 }
 sapply(names(total), function(x){mean(is.na(total[,x]))})
 
@@ -105,7 +106,7 @@ sapply(names(total), function(x){mean(is.na(total[,x]))})
 cate.features <- c(cate.features, 'Product_Info_2_cate', 'Product_Info_2_num', 'Gender_Speci_feat')
 num.features <- names(total)[!names(total) %in% c(cate.features, 'Id', 'Response', medical.keywords)]
 
-load('data/i_test_feats.RData')
+load('data/i_cluster_feats.RData')
 total_new <- cbind(total[,-which(names(total) %in% c('Response'))],  
                    Cnt_NA_row = Cnt_NA_row,
                    Cnt_NA_Emp_row = Cnt_NA_Emp_row,
@@ -117,7 +118,7 @@ total_new <- cbind(total[,-which(names(total) %in% c('Response'))],
                    Product_Info_2_cate = Product_Info_2_cate,
                    Product_Info_2_num = Product_Info_2_num,
                    Gender_Speci_feat = Gender_Speci_feat,
-                   tsne_ALL,
+                   tsne_all, KMEANS = kmeans_all,
                    Response = total$Response)
 for(c in cate.features){
     total_new[,c] <- as.factor(total_new[,c])
@@ -128,6 +129,9 @@ for(n in num.features){
 }
 str(total_new[,num.features])
 sapply(names(total_new), function(x){mean(is.na(total_new[,x]))})
+
+levels(total_new$Product_Info_2) <- 1:length(levels(total_new$Product_Info_2))
+table(total_new$Product_Info_2)
 
 ######################################
           # 4. Split/Output Data #####
@@ -179,15 +183,33 @@ head(total_new);dim(total_new)
 # dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
 # save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_onehot.RData')
 
-#################################
-          # 6. tsne feature #####
-          #######################
+#################################################
+          # 6. tsne/kmeans/distance feature #####
+          #######################################
 library(Rtsne)
 feature.names <- names(total_new)[-c(1, ncol(total_new))]
-tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 2, perplexity=30, check_duplicates = F, pca = F) # theta=0.5, max_iter = 300, 
+tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 3, perplexity=30, check_duplicates = F, pca = F, theta=0.5) #max_iter = 300, 
 embedding <- as.data.frame(tsne$Y)
-tsne_ALL <- embedding[,1:2]; names(tsne_ALL) <- c('TSNE_ALL_1','TSNE_ALL_2')
-save(tsne_ALL, file = 'data/i_test_feats.RData')
+tsne_all <- embedding[,1:3]; names(tsne_all) <- c('TSNE_1','TSNE_2','TSNE_3')
+
+library(h2o) 
+localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
+kmeans_df <- as.h2o(localH2O, total_new[,feature.names])
+fit <- h2o.kmeans(kmeans_df, k = 8, max_iterations = 1000, standardize = T, init = 'Random', seed = 1989) #none, PlusPlus, Furthest, Random
+pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
+kmeans_all <- pred[,1]; table(kmeans_all)
+
+library(caret)
+centroids <- classDist(as.data.frame(total_new[, 2:672]), total_new[, 'Response'])
+# nzv <- nearZeroVar(total_new[, 2:672], saveMetrics= TRUE)
+# nzv[nzv$nzv,][1:10,]
+# comboInfo <- findLinearCombos(total_new[, 2:672])
+# comboInfo
+
+library(pdist)
+d <- pdist(total_new[, 2:672])
+
+save(tsne_ALL,kmeans_all,distance_all, file = 'data/i_cluster_feats.RData')
 
 #################################
          # 7. pca transform #####
