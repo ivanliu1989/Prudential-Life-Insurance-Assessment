@@ -145,8 +145,8 @@ inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
 train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 dim(train_b); dim(train_a); dim(test); dim(train)
-save(train, train_b, train_a, test, file = 'data/fin_train_test.RData')
-str(train[,num.features]); str(train[,cate.features])
+save(train, train_b, train_a, test, file = 'data/fin_train_test_onehot.RData')
+# str(train[,num.features]); str(train[,cate.features])
 
 # Validation
 inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
@@ -158,8 +158,8 @@ train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 
 dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
-save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation.RData')
-str(train[,num.features]); str(train[,cate.features])
+save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_onehot.RData')
+# str(train[,num.features]); str(train[,cate.features])
 
 #######################################
           # 5. One - hot encoding #####
@@ -167,21 +167,8 @@ str(train[,num.features]); str(train[,cate.features])
 total_new <- cbind(data.frame(model.matrix(Response~.-1,total_new)), Response = total_new$Response)
 head(total_new);dim(total_new)
 
-# train <- total_new[total_new$Response != 9, ]
-# test <- total_new[total_new$Response == 9, ]
-# library(caret)
-# set.seed(1989)
-# # Validation
-# inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
-# validation <- train[inTraining,]
-# # Train a & b
-# train <- train[-inTraining,]
-# inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
-# train_a <- train[-inTraining,]
-# train_b <- train[inTraining,]
-# 
-# dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
-# save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_onehot.RData')
+prePro <- preProcess(total_new[, -c(1, ncol(total_new))],method = c('center', 'scale', 'pca'))
+total_new <- cbind(Id = total_new$Id, predict(prePro, total_new[, -c(1, ncol(total_new))]), Response = total_new$Response)
 
 #################################################
           # 6. tsne/kmeans/distance feature #####
@@ -200,7 +187,7 @@ pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
 kmeans_all <- pred[,1]; table(kmeans_all)
 
 library(caret)
-centroids <- classDist(as.data.frame(total_new[, 2:672]), total_new[, 'Response'])
+centroids <- classDist(as.matrix(total_new[, 2:127]), total_new[, 'Response']) #672
 # nzv <- nearZeroVar(total_new[, 2:672], saveMetrics= TRUE)
 # nzv[nzv$nzv,][1:10,]
 # comboInfo <- findLinearCombos(total_new[, 2:672])
