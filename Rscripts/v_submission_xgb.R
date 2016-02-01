@@ -70,4 +70,4 @@ evalerror_2(preds = validPredsOptim, labels = train_2nd$Response)
 PredsOptim = as.numeric(Hmisc::cut2(testPreds, c(-Inf, optCuts$par, Inf))); table(PredsOptim)
 
 submission <- data.frame(Id=test$Id, Response = PredsOptim)
-write_csv(submission, "xgb2811g.csv")
+write_csv(submission, "submission_xgb_stack_20160201_1.csv")
