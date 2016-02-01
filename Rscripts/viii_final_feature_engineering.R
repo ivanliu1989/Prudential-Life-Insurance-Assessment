@@ -14,6 +14,7 @@ pcaImpute = TRUE
 factorical = TRUE
 adddummy = FALSE
 clusterFeat = TRUE
+splitoutput = TRUE
 
 # 1. read data
 cat("read train and test data...\n")
@@ -154,7 +155,7 @@ if(clusterFeat){
         total <- cbind(total_new[,-ncol(total_new)], 
                        tsne_all, 
                        KMEANS = kmeans_all,
-                       distances,
+                       distances_all,
                        Response = total_new$Response)
         total$KMEANS <- as.factor(total$KMEANS)
         train <- total[which(total$Response > 0),]
@@ -184,7 +185,63 @@ if(clusterFeat){
         # nzv <- nearZeroVar(total_new[, 2:(ncol(total_new)-1)], saveMetrics= TRUE)
         # nzv[nzv$nzv,][1:10,]
         
-        save(tsne_ALL,kmeans_all,distances_all, file = 'Data/viii_cluster_feats.RData')
+        save(tsne_all,kmeans_all,distances_all, file = 'Data/viii_cluster_feats.RData')
     }
 }
+
+# 8. Split
+if(splitoutput){
+    total <- rbind(train, test)
+    library(caret)
+    set.seed(1989)
+    # No validation
+    train <- total[which(total$Response > 0),]
+    test <- total[which(total$Response == 0),]
+    inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+    train_a <- train[-inTraining,]
+    train_b <- train[inTraining,]
+    dim(train_b); dim(train_a); dim(test); dim(train)
+    save(train, train_b, train_a, test, file = 'data/viii_train_test.RData')
+    
+    # Validation
+    train <- total[which(total$Response > 0),]
+    test <- total[which(total$Response == 0),]
+    inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
+    validation <- train[inTraining,]
+    train <- train[-inTraining,]
+    inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+    train_a <- train[-inTraining,]
+    train_b <- train[inTraining,]
+    dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
+    save(train, train_b, train_a, validation, test, file = 'data/viii_train_test_validation.RData')
+    
+    # Dummy
+    train <- total[which(total$Response > 0),]
+    test <- total[which(total$Response == 0),]
+    test$Response <- NA
+    dummies <- dummyVars(Response ~ ., data = train[,], sep = "_", levelsOnly = FALSE, fullRank = TRUE)
+    train1 <- as.data.frame(predict(dummies, newdata = train[,]))
+    test <- as.data.frame(predict(dummies, newdata = test[,]))
+    train <- cbind(train1, Response=train$Response)
+    head(test[,names(table(names(test))[table(names(test))==2])])
+    
+    test$Response <- 0
+    total <- rbind(train, test)
+    train <- total[which(total$Response > 0),]
+    test <- total[which(total$Response == 0),]
+    inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+    train_a <- train[-inTraining,]
+    train_b <- train[inTraining,]
+    dim(train_b); dim(train_a); dim(test); dim(train)
+    save(train, train_b, train_a, test, file = 'data/viii_train_test_dummy.RData')
+    
+    train <- total[which(total$Response > 0),]
+    test <- total[which(total$Response == 0),]
+    inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+    train_a <- train[-inTraining,]
+    train_b <- train[inTraining,]
+    dim(train_b); dim(train_a); dim(test); dim(train)
+    save(train, train_b, train_a, validation, test, file = 'data/viii_train_test_validation_dummy.RData')
+}
+
     
