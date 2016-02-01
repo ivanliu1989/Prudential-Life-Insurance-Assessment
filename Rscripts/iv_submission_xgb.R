@@ -35,44 +35,44 @@ watchlist_ba  <- list(val=dtrain_a,train=dtrain_b)
 clf <- xgb.train(data = dtrain_a, eval_metric = 'rmse',
                  early.stop.round = 200, watchlist = watchlist_ab, maximize = F, 
                  verbose = 1, objective = "reg:linear",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 700, colsample = 0.67, print.every.n = 10 
 )
 pred_b_rmse <- predict(clf, data.matrix(train_b[,feature.names]))
 clf <- xgb.train(data = dtrain_b, eval_metric = 'rmse',
                  early.stop.round = 200, watchlist = watchlist_ba, maximize = F, 
                  verbose = 1, objective = "reg:linear", 
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 700, colsample = 0.67, print.every.n = 10 
 )
 pred_a_rmse <- predict(clf, data.matrix(train_a[,feature.names]))
 clf <- xgb.train(data = dtrain, eval_metric = 'rmse',
                  early.stop.round = 200, watchlist = watchlist, maximize = F, 
                  verbose = 1, objective = "reg:linear",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 700, colsample = 0.67, print.every.n = 10 
 )
 pred_test_rmse <- predict(clf, data.matrix(test[,feature.names]))
 # Feat2
 clf <- xgb.train(data = dtrain_a, feval = evalerror,
                  early.stop.round = 200, watchlist = watchlist_ab, maximize = T,
                  verbose = 1, objective = "reg:linear",
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 700, colsample = 0.67, print.every.n = 10 
 )
 pred_b_kappa <- predict(clf, data.matrix(train_b[,feature.names]))
 clf <- xgb.train(data = dtrain_b, feval = evalerror,
                  early.stop.round = 200, watchlist = watchlist_ba, maximize = T,
                  verbose = 1, objective = "reg:linear", 
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 700, colsample = 0.67, print.every.n = 10 
 )
 pred_a_kappa <- predict(clf, data.matrix(train_a[,feature.names]))
 clf <- xgb.train(data = dtrain, feval = evalerror,
                  early.stop.round = 200, watchlist = watchlist, maximize = T,
                  verbose = 1, objective = "reg:linear",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 700, colsample = 0.67, print.every.n = 10 
 )
 pred_test_kappa <- predict(clf, data.matrix(test[,feature.names]))
 
@@ -88,44 +88,44 @@ watchlist_ba  <- list(val=dtrain_a,train=dtrain_b)
 clf <- xgb.train(data = dtrain_a, eval_metric = 'merror',
                  early.stop.round = 200, watchlist = watchlist_ab, maximize = F, 
                  verbose = 1, objective = "multi:softmax", 
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_b_softmax <- predict(clf, data.matrix(train_b[,feature.names]))
 clf <- xgb.train(data = dtrain_b, eval_metric = 'merror',
                  early.stop.round = 200, watchlist = watchlist_ba, maximize = F, 
                  verbose = 1, objective = "multi:softmax",
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_a_softmax <- predict(clf, data.matrix(train_a[,feature.names]))
 clf <- xgb.train(data = dtrain, eval_metric = 'merror',
                  early.stop.round = 200, watchlist = watchlist, maximize = F, 
                  verbose = 1, objective = "multi:softmax",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_test_softmax <- predict(clf, data.matrix(test[,feature.names]))
 # Feat4
 clf <- xgb.train(data = dtrain_a, eval_metric = 'merror',
                  early.stop.round = 200, watchlist = watchlist_ab, maximize = F, 
                  verbose = 1, objective = "multi:softprob",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_b_softprob <- predict(clf, data.matrix(train_b[,feature.names]))
 clf <- xgb.train(data = dtrain_b, eval_metric = 'merror',
                  early.stop.round = 200, watchlist = watchlist_ba, maximize = F, 
                  verbose = 1, objective = "multi:softprob",
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 800, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_a_softprob <- predict(clf, data.matrix(train_a[,feature.names]))
 clf <- xgb.train(data = dtrain, eval_metric = 'merror',
                  early.stop.round = 200, watchlist = watchlist, maximize = F, 
                  verbose = 1, objective = "multi:softprob",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 800, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_test_softprob <- predict(clf, data.matrix(test[,feature.names]))
 
@@ -133,44 +133,44 @@ pred_test_softprob <- predict(clf, data.matrix(test[,feature.names]))
 clf <- xgb.train(data = dtrain_a, eval_metric = 'mlogloss',
                  early.stop.round = 200, watchlist = watchlist_ab, maximize = F, 
                  verbose = 1, objective = "multi:softmax", 
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 800, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_b_softmax_mlog <- predict(clf, data.matrix(train_b[,feature.names]))
 clf <- xgb.train(data = dtrain_b, eval_metric = 'mlogloss',
                  early.stop.round = 200, watchlist = watchlist_ba, maximize = F, 
                  verbose = 1, objective = "multi:softmax",
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_a_softmax_mlog <- predict(clf, data.matrix(train_a[,feature.names]))
 clf <- xgb.train(data = dtrain, eval_metric = 'mlogloss',
                  early.stop.round = 200, watchlist = watchlist, maximize = F, 
                  verbose = 1, objective = "multi:softmax",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_test_softmax_mlog <- predict(clf, data.matrix(test[,feature.names]))
 # Feat6
 clf <- xgb.train(data = dtrain_a, eval_metric = 'mlogloss',
                  early.stop.round = 200, watchlist = watchlist_ab, maximize = F, 
                  verbose = 1, objective = "multi:softprob",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_b_softprob_mlog <- predict(clf, data.matrix(train_b[,feature.names]))
 clf <- xgb.train(data = dtrain_b, eval_metric = 'mlogloss',
                  early.stop.round = 200, watchlist = watchlist_ba, maximize = F, 
                  verbose = 1, objective = "multi:softprob",
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_a_softprob_mlog <- predict(clf, data.matrix(train_a[,feature.names]))
 clf <- xgb.train(data = dtrain, eval_metric = 'mlogloss',
                  early.stop.round = 200, watchlist = watchlist, maximize = F, 
                  verbose = 1, objective = "multi:softprob",  
-                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.9,
-                 nrounds = 800, colsample = 0.67, print.every.n = 10 ,num_class = 8
+                 booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                 nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
 )
 pred_test_softprob_mlog <- predict(clf, data.matrix(test[,feature.names]))
 
@@ -189,6 +189,7 @@ train_2nd <- cbind(train_2nd, META_XGB_MULSOFT, META_XGB_MULSOFT_MLOG)
 test$XGB_RMSE <- pred_test_rmse
 test$XGB_KAPPA <- pred_test_kappa
 test$XGB_SOFTMAX <- pred_test_softmax
+test$XGB_SOFTMAX_MLOG <- pred_test_softmax_mlog
 META_XGB_MULSOFT <- as.data.frame(t(matrix(pred_test_softprob, 8, nrow(test))))
 names(META_XGB_MULSOFT) <- paste('META_XGB_MUL_', 1:8, sep = '')
 META_XGB_MULSOFT_MLOG <- as.data.frame(t(matrix(pred_test_softprob_mlog, 8, nrow(test))))
@@ -199,6 +200,7 @@ train_a_2nd <- train_a
 train_a_2nd$XGB_RMSE <- pred_a_rmse
 train_a_2nd$XGB_KAPPA <- pred_a_kappa
 train_a_2nd$XGB_SOFTMAX <- pred_a_softmax
+train_a_2nd$XGB_SOFTMAX_MLOG <- pred_a_softmax_mlog
 META_XGB_MULSOFT <- as.data.frame(t(matrix(pred_a_softprob, 8, nrow(train_a))))
 names(META_XGB_MULSOFT) <- paste('META_XGB_MUL_', 1:8, sep = '')
 META_XGB_MULSOFT_MLOG <- as.data.frame(t(matrix(pred_a_softprob_mlog, 8, nrow(train_a))))
@@ -209,13 +211,14 @@ train_b_2nd <- train_b
 train_b_2nd$XGB_RMSE <- pred_b_rmse
 train_b_2nd$XGB_KAPPA <- pred_b_kappa
 train_b_2nd$XGB_SOFTMAX <- pred_b_softmax
+train_b_2nd$XGB_SOFTMAX_MLOG <- pred_b_softmax_mlog
 META_XGB_MULSOFT <- as.data.frame(t(matrix(pred_b_softprob, 8, nrow(train_b))))
 names(META_XGB_MULSOFT) <- paste('META_XGB_MUL_', 1:8, sep = '')
 META_XGB_MULSOFT_MLOG <- as.data.frame(t(matrix(pred_b_softprob_mlog, 8, nrow(train_b))))
 names(META_XGB_MULSOFT_MLOG) <- paste('META_XGB_MUL_MLOG_', 1:8, sep = '')
 train_b_2nd <- cbind(train_b_2nd, META_XGB_MULSOFT, META_XGB_MULSOFT_MLOG)
 
-save(train_2nd, train_a_2nd, train_b_2nd, test, file= 'data/fin_train_test_stack_feat.RData')
+save(train_2nd, train_a_2nd, train_b_2nd, test, file= 'data/fin_train_test_stack_feat_comp.RData')
 
 ScoreQuadraticWeightedKappa(round(pred_b_rmse),train_b$Response)
 ScoreQuadraticWeightedKappa(round(pred_a_rmse),train_a$Response)
