@@ -1,11 +1,5 @@
 setwd('/Users/ivanliu/Downloads/Prudential-Life-Insurance-Assessment')
-library(readr)
-library(xgboost) 
-library(Hmisc)
-library(caret)
-library(e1071)
-library(data.table)
-library("Metrics")
+library(readr);library(xgboost);library(Hmisc);library(caret);library(e1071);library(data.table);library("Metrics")
 rm(list=ls());gc()
 set.seed(888)
 nbmvars = TRUE
@@ -20,25 +14,52 @@ splitoutput = TRUE
 cat("read train and test data...\n")
 train <- fread("data/train.csv", data.table = F)
 test  <- fread("data/test.csv", data.table = F)
-feature.names <- names(train)[2:ncol(train)-1]
+feature.names <- names(train)[2:(ncol(train)-1)]
+inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+train_a <- train[-inTraining,]
+train_b <- train[inTraining,]
+train <- rbind(train_a, train_b)
+dim(train_a); dim(train_b); dim(train)
 
 # 2. nb meta data
 if(nbmvars) {
-    cat("NB medical keywords\n")
-    
-    feature.names1 <- grep('Medical_H', feature.names, value=TRUE)
-    feature.names2 <- grep('Medical_H', feature.names, value=TRUE, invert=TRUE)
-    
-    trainMK <- train[, c(feature.names1)]
+    cat("NB meta data\n")
+    # Medical
+    feature.names1 <- grep('Medical_', feature.names, value=TRUE)
+    trainMK <- train[, feature.names1]
     testMK <- test[, feature.names1]
-    date()
-    nb <- naiveBayes(x=trainMK, y=factor(train$Response, labels="x"), laplace = 0)
-    date()
-    pred <- predict(nb, newdata=trainMK, type="raw")
-    train <- cbind(train[,-ncol(train)], MKprob1=pred[, 1], MKprob2=pred[, 2], MKprob3=pred[, 3], MKprob4=pred[, 4], MKprob5=pred[, 5], MKprob6=pred[, 6], MKprob7=pred[, 7], MKprob8=pred[, 8], Response=train$Response)
+    trainMK_a <- train_a[, feature.names1]
+    trainMK_b <- train_b[, feature.names1]
     
+    nb <- naiveBayes(x=trainMK, y=factor(train$Response, labels="x"), laplace = 0)
     pred <- predict(nb, newdata=testMK, type="raw")
-    test <- cbind(test, MKprob1=pred[, 1], MKprob2=pred[, 2], MKprob3=pred[, 3], MKprob4=pred[, 4], MKprob5=pred[, 5], MKprob6=pred[, 6], MKprob7=pred[, 7], MKprob8=pred[, 8])
+    test <- cbind(test, NBMedprob1=pred[, 1], NBMedprob2=pred[, 2], NBMedprob3=pred[, 3], NBMedprob4=pred[, 4], NBMedprob5=pred[, 5], NBMedprob6=pred[, 6], NBMedprob7=pred[, 7], NBMedprob8=pred[, 8])
+    
+    nb <- naiveBayes(x=trainMK_a, y=factor(train_a$Response, labels="x"), laplace = 0)
+    pred_b <- predict(nb, newdata=trainMK_b, type="raw")
+    nb <- naiveBayes(x=trainMK_b, y=factor(train_b$Response, labels="x"), laplace = 0)
+    pred_a <- predict(nb, newdata=trainMK_a, type="raw")
+    pred <- rbind(pred_a, pred_b)
+    train <- cbind(train[,-ncol(train)], NBMedprob1=pred[, 1], NBMedprob2=pred[, 2], NBMedprob3=pred[, 3], NBMedprob4=pred[, 4], NBMedprob5=pred[, 5], NBMedprob6=pred[, 6], NBMedprob7=pred[, 7], NBMedprob8=pred[, 8], Response=train$Response)
+    
+    
+    # Insurance
+    feature.names1 <- grep('Insur', feature.names, value=TRUE)
+    trainMK <- train[, feature.names1]
+    testMK <- test[, feature.names1]
+    trainMK_a <- train_a[, feature.names1]
+    trainMK_b <- train_b[, feature.names1]
+    
+    nb <- naiveBayes(x=trainMK, y=factor(train$Response, labels="x"), laplace = 0)
+    pred <- predict(nb, newdata=testMK, type="raw")
+    test <- cbind(test, NBMHprob1=pred[, 1], NBInsprob1=pred[, 1], NBInsprob2=pred[, 2], NBInsprob3=pred[, 3], NBInsprob4=pred[, 4], NBInsprob5=pred[, 5], NBInsprob6=pred[, 6], NBInsprob7=pred[, 7], NBInsprob8=pred[, 8])
+    
+    nb <- naiveBayes(x=trainMK_a, y=factor(train_a$Response, labels="x"), laplace = 0)
+    pred_b <- predict(nb, newdata=trainMK_b, type="raw")
+    nb <- naiveBayes(x=trainMK_b, y=factor(train_b$Response, labels="x"), laplace = 0)
+    pred_a <- predict(nb, newdata=trainMK_a, type="raw")
+    pred <- rbind(pred_a, pred_b)
+    train <- cbind(train[,-ncol(train)], NBInsprob1=pred[, 1], NBInsprob2=pred[, 2], NBInsprob3=pred[, 3], NBInsprob4=pred[, 4], NBInsprob5=pred[, 5], NBInsprob6=pred[, 6], NBInsprob7=pred[, 7], NBInsprob8=pred[, 8], Response=train$Response)
 }
 
 # 3. new features
@@ -68,6 +89,52 @@ if(newFeat){
     Gender_Speci_feat <- ifelse(total$Family_Hist_2>=0 & is.na(total$Family_Hist_3), 1, Gender_Speci_feat)
     Gender_Speci_feat <- ifelse(total$Family_Hist_3>=0 & is.na(total$Family_Hist_2), 0, Gender_Speci_feat)
     Gender_Speci_feat[is.na(Gender_Speci_feat)] <- -1
+    
+    # 6. ##----Feature engineering-------------------------------------------------------------------------
+    #Quantile cut-off used to define custom variables 10 and 12 (step functions over BMI and BMI*Ins_Age)
+    tra <- train
+    qbmic <- 0.8
+    qbmic2 <- 0.9
+    #Hand engineered features. Found by EDA (especially added variable plots), some parameters optimized
+    #using cross validation. Nonlinear dependence on BMI and its interaction with age make intuitive sense.
+    custom_var_1 <- as.numeric(tra$Medical_History_15 < 10.0)
+    custom_var_1[is.na(custom_var_1)] <- 0.0 #impute these NAs with 0s, note that they were not median-imputed
+    custom_var_3 <- as.numeric(tra$Product_Info_4 < 0.075)
+    custom_var_4 <- as.numeric(tra$Product_Info_4 == 1)
+    custom_var_6 <- (tra$BMI + 1.0)**2.0
+    custom_var_7 <- (tra$BMI)**0.8
+    custom_var_8 <- tra$Ins_Age**8.5
+    custom_var_9 <- (tra$BMI*tra$Ins_Age)**2.5
+    BMI_cutoff <- quantile(tra$BMI, qbmic)
+    custom_var_10 <- as.numeric(tra$BMI > BMI_cutoff)
+    custom_var_11 <- (tra$BMI*tra$Product_Info_4)**0.9
+    ageBMI_cutoff <- quantile(tra$Ins_Age*tra$BMI, qbmic2)
+    custom_var_12 <- as.numeric(tra$Ins_Age*tra$BMI > ageBMI_cutoff)
+    custom_var_13 <- (tra$BMI*tra$Medical_Keyword_3 + 0.5)**3.0
+    #Add the custom variables to the important variable dataframe
+    impo <- cbind(impo, custom_var_1, custom_var_3, custom_var_4, custom_var_6, custom_var_7, custom_var_8, custom_var_9, custom_var_10, custom_var_11, custom_var_12, custom_var_13)
+    #Remove weight and height, they are very correlated with BMI (we know, but VIFs can be used to show this)
+    impo <- impo[,!(names(impo) %in% c("Ht", "Wt"))]
+    #Same features as above
+    custom_var_1 <- as.numeric(test$Medical_History_15 < 10.0)
+    custom_var_3 <- as.numeric(test$Product_Info_4 < 0.075)
+    custom_var_4 <- as.numeric(test$Product_Info_4 == 1)
+    custom_var_1[is.na(custom_var_1)] <- 0.0
+    custom_var_6 <- (test$BMI + 1.0)**2.0
+    custom_var_7 <- (test$BMI)**0.8
+    custom_var_8 <- test$Ins_Age**8.5
+    custom_var_9 <- (test$BMI*test$Ins_Age)**2.5
+    custom_var_10 <- as.numeric(test$BMI > BMI_cutoff)
+    custom_var_11 <- (test$BMI*test$Product_Info_4)**0.9
+    custom_var_12 <- as.numeric(test$Ins_Age*test$BMI > ageBMI_cutoff)	
+    custom_var_13 <- (test$BMI*test$Medical_Keyword_3 + 0.5)**3.0
+    #Make important variable dataframe for test as well
+    tempo <- manage_na(test[,var_names])
+    tempo <- cbind(tempo, custom_var_1, custom_var_3, custom_var_4, custom_var_6, custom_var_7, custom_var_8, custom_var_9, custom_var_10, custom_var_11, custom_var_12, custom_var_13)
+    #Remove height and weight from there too
+    tempo <- tempo[,!(names(tempo) %in% c("Ht", "Wt"))]
+    ##------------------------------------------------------------------------------------------------
+    
     
     total <- cbind(total[,1:(ncol(total)-1)], Cnt_NA_row = Cnt_NA_row,
                    Cnt_NA_Emp_row = Cnt_NA_Emp_row,
@@ -192,7 +259,6 @@ if(clusterFeat){
 # 8. Split
 if(splitoutput){
     total <- rbind(train, test)
-    library(caret)
     set.seed(1989)
     # No validation
     train <- total[which(total$Response > 0),]
