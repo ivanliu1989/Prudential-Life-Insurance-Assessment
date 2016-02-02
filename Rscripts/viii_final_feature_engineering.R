@@ -15,6 +15,7 @@ cat("read train and test data...\n")
 train <- fread("data/train.csv", data.table = F)
 test  <- fread("data/test.csv", data.table = F)
 feature.names <- names(train)[2:(ncol(train)-1)]
+feature.names.dum <- names(train)[2:ncol(train)]
 inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
 train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
@@ -42,7 +43,6 @@ if(nbmvars) {
     pred <- rbind(pred_a, pred_b)
     train <- cbind(train[,-ncol(train)], NBMedprob1=pred[, 1], NBMedprob2=pred[, 2], NBMedprob3=pred[, 3], NBMedprob4=pred[, 4], NBMedprob5=pred[, 5], NBMedprob6=pred[, 6], NBMedprob7=pred[, 7], NBMedprob8=pred[, 8], Response=train$Response)
     
-    
     # Insurance
     feature.names1 <- grep('Insur', feature.names, value=TRUE)
     trainMK <- train[, feature.names1]
@@ -52,7 +52,7 @@ if(nbmvars) {
     
     nb <- naiveBayes(x=trainMK, y=factor(train$Response, labels="x"), laplace = 0)
     pred <- predict(nb, newdata=testMK, type="raw")
-    test <- cbind(test, NBMHprob1=pred[, 1], NBInsprob1=pred[, 1], NBInsprob2=pred[, 2], NBInsprob3=pred[, 3], NBInsprob4=pred[, 4], NBInsprob5=pred[, 5], NBInsprob6=pred[, 6], NBInsprob7=pred[, 7], NBInsprob8=pred[, 8])
+    test <- cbind(test, NBInsprob1=pred[, 1], NBInsprob2=pred[, 2], NBInsprob3=pred[, 3], NBInsprob4=pred[, 4], NBInsprob5=pred[, 5], NBInsprob6=pred[, 6], NBInsprob7=pred[, 7], NBInsprob8=pred[, 8])
     
     nb <- naiveBayes(x=trainMK_a, y=factor(train_a$Response, labels="x"), laplace = 0)
     pred_b <- predict(nb, newdata=trainMK_b, type="raw")
@@ -60,6 +60,44 @@ if(nbmvars) {
     pred_a <- predict(nb, newdata=trainMK_a, type="raw")
     pred <- rbind(pred_a, pred_b)
     train <- cbind(train[,-ncol(train)], NBInsprob1=pred[, 1], NBInsprob2=pred[, 2], NBInsprob3=pred[, 3], NBInsprob4=pred[, 4], NBInsprob5=pred[, 5], NBInsprob6=pred[, 6], NBInsprob7=pred[, 7], NBInsprob8=pred[, 8], Response=train$Response)
+}
+
+# 2.2 xgb meta data
+if(nbmvars) {
+    cat("XGB meta data\n")
+    dtrain        <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response-1, missing=NA) 
+    dtrain_a      <- xgb.DMatrix(data=data.matrix(train_a[,feature.names]),label=train_a$Response-1, missing=NA) 
+    dtrain_b      <- xgb.DMatrix(data=data.matrix(train_b[,feature.names]),label=train_b$Response-1, missing=NA) 
+    dtest         <- xgb.DMatrix(data=data.matrix(test[,feature.names]),label=test$Response-1, missing=NA)
+    watchlist     <- list(val=dtrain,train=dtrain)
+    watchlist_ab  <- list(val=dtrain_b,train=dtrain_a)
+    watchlist_ba  <- list(val=dtrain_a,train=dtrain_b)
+    
+    clf <- xgb.train(data = dtrain_a, eval_metric = 'mlogloss',
+                     early.stop.round = 200, watchlist = watchlist_ab, maximize = F, 
+                     verbose = 1, objective = "multi:softprob", 
+                     booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                     nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
+    )
+    pred_b <- as.data.frame(t(matrix(predict(clf, data.matrix(train_b[,feature.names])), 8, nrow(train_b)))) 
+    clf <- xgb.train(data = dtrain_b, eval_metric = 'mlogloss',
+                     early.stop.round = 200, watchlist = watchlist_ba, maximize = F, 
+                     verbose = 1, objective = "multi:softprob",
+                     booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                     nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
+    )
+    pred_a <- as.data.frame(t(matrix(predict(clf, data.matrix(train_a[,feature.names])), 8, nrow(train_a))))
+    pred <- rbind(pred_a, pred_b)
+    train <- cbind(train[,-ncol(train)], XGBprob1=pred[, 1], XGBprob2=pred[, 2], XGBprob3=pred[, 3], XGBprob4=pred[, 4], XGBprob5=pred[, 5], XGBprob6=pred[, 6], XGBprob7=pred[, 7], XGBprob8=pred[, 8], Response=train$Response)
+    
+    clf <- xgb.train(data = dtrain, eval_metric = 'mlogloss',
+                     early.stop.round = 200, watchlist = watchlist, maximize = F, 
+                     verbose = 1, objective = "multi:softprob", 
+                     booste = "gbtree", eta = 0.035, max_depth = 6, min_child_weight = 3, subsample = 0.8,
+                     nrounds = 500, colsample = 0.7, print.every.n = 10 ,num_class = 8
+    )
+    pred <- as.data.frame(t(matrix(predict(clf, data.matrix(test[,feature.names])), 8, nrow(test))))
+    test <- cbind(test, XGBprob1=pred[, 1], XGBprob2=pred[, 2], XGBprob3=pred[, 3], XGBprob4=pred[, 4], XGBprob5=pred[, 5], XGBprob6=pred[, 6], XGBprob7=pred[, 7], XGBprob8=pred[, 8])
 }
 
 # 3. new features
@@ -92,7 +130,7 @@ if(newFeat){
     
     # 6. ##----Feature engineering-------------------------------------------------------------------------
     #Quantile cut-off used to define custom variables 10 and 12 (step functions over BMI and BMI*Ins_Age)
-    tra <- train
+    tra <- total
     qbmic <- 0.8
     qbmic2 <- 0.9
     #Hand engineered features. Found by EDA (especially added variable plots), some parameters optimized
@@ -111,30 +149,7 @@ if(newFeat){
     ageBMI_cutoff <- quantile(tra$Ins_Age*tra$BMI, qbmic2)
     custom_var_12 <- as.numeric(tra$Ins_Age*tra$BMI > ageBMI_cutoff)
     custom_var_13 <- (tra$BMI*tra$Medical_Keyword_3 + 0.5)**3.0
-    #Add the custom variables to the important variable dataframe
-    impo <- cbind(impo, custom_var_1, custom_var_3, custom_var_4, custom_var_6, custom_var_7, custom_var_8, custom_var_9, custom_var_10, custom_var_11, custom_var_12, custom_var_13)
-    #Remove weight and height, they are very correlated with BMI (we know, but VIFs can be used to show this)
-    impo <- impo[,!(names(impo) %in% c("Ht", "Wt"))]
-    #Same features as above
-    custom_var_1 <- as.numeric(test$Medical_History_15 < 10.0)
-    custom_var_3 <- as.numeric(test$Product_Info_4 < 0.075)
-    custom_var_4 <- as.numeric(test$Product_Info_4 == 1)
-    custom_var_1[is.na(custom_var_1)] <- 0.0
-    custom_var_6 <- (test$BMI + 1.0)**2.0
-    custom_var_7 <- (test$BMI)**0.8
-    custom_var_8 <- test$Ins_Age**8.5
-    custom_var_9 <- (test$BMI*test$Ins_Age)**2.5
-    custom_var_10 <- as.numeric(test$BMI > BMI_cutoff)
-    custom_var_11 <- (test$BMI*test$Product_Info_4)**0.9
-    custom_var_12 <- as.numeric(test$Ins_Age*test$BMI > ageBMI_cutoff)	
-    custom_var_13 <- (test$BMI*test$Medical_Keyword_3 + 0.5)**3.0
-    #Make important variable dataframe for test as well
-    tempo <- manage_na(test[,var_names])
-    tempo <- cbind(tempo, custom_var_1, custom_var_3, custom_var_4, custom_var_6, custom_var_7, custom_var_8, custom_var_9, custom_var_10, custom_var_11, custom_var_12, custom_var_13)
-    #Remove height and weight from there too
-    tempo <- tempo[,!(names(tempo) %in% c("Ht", "Wt"))]
     ##------------------------------------------------------------------------------------------------
-    
     
     total <- cbind(total[,1:(ncol(total)-1)], Cnt_NA_row = Cnt_NA_row,
                    Cnt_NA_Emp_row = Cnt_NA_Emp_row,
@@ -145,7 +160,19 @@ if(newFeat){
                    BMI_InsAge = BMI_InsAge,
                    Product_Info_2_cate = Product_Info_2_cate,
                    Product_Info_2_num = Product_Info_2_num,
-                   Gender_Speci_feat = Gender_Speci_feat, Response = total$Response)
+                   Gender_Speci_feat = Gender_Speci_feat, 
+                   custom_var_1 = custom_var_1,
+                   custom_var_3 = custom_var_3,
+                   custom_var_4 = custom_var_4,
+                   custom_var_6 = custom_var_6,
+                   custom_var_7 = custom_var_7,
+                   custom_var_8 = custom_var_8,
+                   custom_var_9 = custom_var_9,
+                   custom_var_10 = custom_var_10,
+                   custom_var_11 = custom_var_11,
+                   custom_var_12 = custom_var_12,
+                   custom_var_13 = custom_var_13,
+                   Response = total$Response)
     train <- total[which(total$Response > 0),]
     test <- total[which(total$Response == 0),]
 }
@@ -204,13 +231,13 @@ test <- total[which(total$Response == 0),]
 
 # 6. dummy
 if(adddummy) {
-    test$Response <- NA
+    test$Response <- 0
     #All_Data <- rbind(train,test) 
-    dummies <- dummyVars(Response ~ ., data = train[,], sep = "_", levelsOnly = FALSE, fullRank = TRUE)
-    train1 <- as.data.frame(predict(dummies, newdata = train[,]))
-    test <- as.data.frame(predict(dummies, newdata = test[,]))
-    train <- cbind(train1, Response=train$Response)
-    head(test[,names(table(names(test))[table(names(test))==2])])
+    dummies <- dummyVars(Response ~ ., data = train[,c(1:127,ncol(train))], sep = "_", levelsOnly = FALSE, fullRank = TRUE)
+    train1 <- as.data.frame(predict(dummies, newdata = train[,c(1:127,ncol(train))]))
+    test_dum <- as.data.frame(predict(dummies, newdata = test[,c(1:127,ncol(train))]))
+    train_dum <- cbind(train1, Response=train$Response)
+    head(test_dum[,names(table(names(test_dum))[table(names(test_dum))==2])])
 }    
 
 # 7. tsne/distance/kmeans
@@ -221,21 +248,36 @@ if(clusterFeat){
         total_new <- rbind(train,test)
         total <- cbind(total_new[,-ncol(total_new)], 
                        tsne_all, 
+                       tsne_medi,
+                       tsne_insur,
                        KMEANS = kmeans_all,
                        distances_all,
+                       distances_medi,
+                       distances_insur,
                        Response = total_new$Response)
         total$KMEANS <- as.factor(total$KMEANS)
         train <- total[which(total$Response > 0),]
         test <- total[which(total$Response == 0),]
     }else{
-        test$Response <- 0
-        total_new <- rbind(train,test)
+        test_dum$Response <- 0
+        total_new <- rbind(train_dum,test_dum)
         feature.names <- names(total_new)[-c(1, ncol(total_new))]
         # 1. tsne
         library(Rtsne)
         tsne <- Rtsne(as.matrix(total_new[,feature.names]), dims = 3, perplexity=30, check_duplicates = F, pca = F, theta=0.5) #max_iter = 300, 
         embedding <- as.data.frame(tsne$Y)
-        tsne_all <- embedding[,1:3]; names(tsne_all) <- c('TSNE_1','TSNE_2','TSNE_3')
+        tsne_all <- embedding[,1:3]; names(tsne_all) <- c('TSNE_A1','TSNE_A2','TSNE_A3')
+        # medical
+        feature.names1 <- grep('Medical_', feature.names, value=TRUE)
+        tsne <- Rtsne(as.matrix(total_new[,feature.names1]), dims = 3, perplexity=30, check_duplicates = F, pca = F, theta=0.5) #max_iter = 300, 
+        embedding <- as.data.frame(tsne$Y)
+        tsne_medi <- embedding[,1:3]; names(tsne_medi) <- c('TSNE_M1','TSNE_M2','TSNE_M3')
+        # insurance
+        feature.names1 <- grep('Insur', feature.names, value=TRUE)
+        tsne <- Rtsne(as.matrix(total_new[,feature.names1]), dims = 3, perplexity=30, check_duplicates = F, pca = F, theta=0.5) #max_iter = 300, 
+        embedding <- as.data.frame(tsne$Y)
+        tsne_insur <- embedding[,1:3]; names(tsne_insur) <- c('TSNE_I1','TSNE_I2','TSNE_I3')
+        
         # 2. kmeans
         library(h2o) 
         localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
@@ -245,14 +287,44 @@ if(clusterFeat){
         kmeans_all <- pred[,1]; table(kmeans_all)
         # 3. correlation distance
         library(caret)
+        # all
         centroids <- classDist(total_new[, feature.names], as.factor(total_new[, 'Response']), pca = T, keep = 293) 
         distances <- predict(centroids, total_new[, feature.names])
         distances <- as.data.frame(distances)
-        distances_all <- distances[,-1]
+        distances_all <- distances[,-1]; names(distances_all) <- paste('DistALL', 1:8, sep = "")
+        # medical
+        feature.names1 <- grep('Medical_', feature.names, value=TRUE)
+        centroids <- classDist(total_new[, feature.names1], as.factor(total_new[, 'Response']), pca = T, keep = 293) 
+        distances <- predict(centroids, total_new[, feature.names1])
+        distances <- as.data.frame(distances)
+        distances_medi <- distances[,-1]; names(distances_medi) <- paste('DistMEDI', 1:8, sep = "")
+        # Insurance
+        feature.names1 <- grep('Insur', feature.names, value=TRUE)
+        centroids <- classDist(total_new[, feature.names1], as.factor(total_new[, 'Response']), pca = T, keep = 293) 
+        distances <- predict(centroids, total_new[, feature.names1])
+        distances <- as.data.frame(distances)
+        distances_insur <- distances[,-1]; names(distances_insur) <- paste('DistINSUR', 1:8, sep = "")
         # nzv <- nearZeroVar(total_new[, 2:(ncol(total_new)-1)], saveMetrics= TRUE)
         # nzv[nzv$nzv,][1:10,]
         
-        save(tsne_all,kmeans_all,distances_all, file = 'Data/viii_cluster_feats.RData')
+        save(tsne_all, tsne_insur, tsne_medi, kmeans_all, distances_all, distances_medi, distances_insur, file = 'Data/viii_cluster_feats.RData')
+        
+        # 4. Apply to raw data
+        load('Data/viii_cluster_feats.RData')
+        test$Response <- 0
+        total_new <- rbind(train,test)
+        total <- cbind(total_new[,-ncol(total_new)], 
+                       tsne_all, 
+                       tsne_medi,
+                       tsne_insur,
+                       KMEANS = kmeans_all,
+                       distances_all,
+                       distances_medi,
+                       distances_insur,
+                       Response = total_new$Response)
+        total$KMEANS <- as.factor(total$KMEANS)
+        train <- total[which(total$Response > 0),]
+        test <- total[which(total$Response == 0),]
     }
 }
 
