@@ -8,9 +8,7 @@ rm(list=ls());gc()
 ##############################
           # 1. Read Data #####
           ####################
-    load('data/fin_train_test_validation.RData')
-    # load('data/fin_train_test.RData')
-    # load('data/fin_train_test_validation_onehot.RData')
+    load('data/viii_train_test_validation.RData')
 
 ##############################
           # 2. Eval Func #####
@@ -57,13 +55,13 @@ rm(list=ls());gc()
     watchlist_ab  <- list(val=dtrain_b,train=dtrain_a)
     watchlist_ba  <- list(val=dtrain_a,train=dtrain_b)
     
-    clf <- xgb.train(data                = dtrain_stack, # dtrain_a, dtrain_b, dtrain, dtrain_stack
+    clf <- xgb.train(data                = dtrain, # dtrain_a, dtrain_b, dtrain, dtrain_stack
                      nrounds             = 800, 
                      early.stop.round    = 200,
-                     watchlist           = watchlist_stack, # watchlist_ab, watchlist_ba, watchlist, watchlist_stack
-                     # feval               = evalerror,
-                     eval_metric         = 'rmse',
-                     maximize            = F,
+                     watchlist           = watchlist, # watchlist_ab, watchlist_ba, watchlist, watchlist_stack
+                     feval               = evalerror,
+                     # eval_metric         = 'rmse',
+                     maximize            = T,
                      verbose             = 1,
                      objective           = "reg:linear",  # multi:softmax, reg:linear, multi:softprob
                      booster             = "gbtree",
