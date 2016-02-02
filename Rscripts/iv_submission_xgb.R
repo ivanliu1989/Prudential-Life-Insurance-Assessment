@@ -5,8 +5,8 @@ library(Metrics)
 library(Hmisc)
 rm(list=ls());gc()
 
-# load('data/fin_train_test_validation.RData')
-load('data/fin_train_test.RData')
+# load('data/viii_train_test_validation.RData')
+load('data/viii_train_test.RData')
 
 evalerror = function(preds, dtrain) {
     labels <- getinfo(dtrain, "label")

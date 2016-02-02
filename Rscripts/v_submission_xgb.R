@@ -5,7 +5,7 @@ library(Metrics)
 library(Hmisc)
 rm(list=ls());gc()
 # load('data/fin_train_test_stack_feat.RData')
-load('data/fin_train_test_stack_feat_2.RData')
+load('data/fin_train_test_stack_feat_comp.RData')
 
 evalerror = function(preds, dtrain) {
     labels <- getinfo(dtrain, "label")
@@ -20,7 +20,7 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 }
 
 set.seed(23)
-dropitems <- c('Id','Response', 'XGB_SOFTMAX_MLOG')
+dropitems <- c('Id','Response')
 feature.names <- names(train_2nd)[!names(train_2nd) %in% dropitems]
 ### Num stack features
 dtrain        <- xgb.DMatrix(data=data.matrix(train_2nd[,feature.names]),label=train_2nd$Response) 
@@ -31,13 +31,13 @@ watchlist     <- list(val=dtrain,train=dtrain)
 watchlist_ab  <- list(val=dtrain_b,train=dtrain_a)
 watchlist_ba  <- list(val=dtrain_a,train=dtrain_b)
 
-clf <- xgb.train(data                = dtrain, # dtrain_a, dtrain_b, dtrain
+clf <- xgb.train(data                = dtrain_a, # dtrain_a, dtrain_b, dtrain
                  nrounds             = 200, 
                  early.stop.round    = 200,
-                 watchlist           = watchlist, # watchlist_ab, watchlist_ba, watchlist
-                 feval               = evalerror,
-                 # eval_metric         = 'rmse',
-                 maximize            = T,
+                 watchlist           = watchlist_ab, # watchlist_ab, watchlist_ba, watchlist
+                 # feval               = evalerror,
+                 eval_metric         = 'rmse',
+                 maximize            = F,
                  verbose             = 1,
                  objective           = "reg:linear", 
                  booster             = "gbtree",
@@ -54,11 +54,11 @@ clf <- xgb.train(data                = dtrain, # dtrain_a, dtrain_b, dtrain
 # pred_a_rmse <- predict(clf, data.matrix(train_a_2nd[,feature.names]))
 # pred_b_kap <- predict(clf, data.matrix(train_b_2nd[,feature.names]))
 # pred_a_kap <- predict(clf, data.matrix(train_a_2nd[,feature.names]))
-validPreds <- (c(pred_a_rmse,pred_b_rmse) + c(pred_a_kap,pred_b_kap))/2
+# validPreds <- (c(pred_a_rmse,pred_b_rmse) + c(pred_a_kap,pred_b_kap))/2
 
-test_kap <- predict(clf, data.matrix(test[,feature.names]))
-test_rmse <- predict(clf, data.matrix(test[,feature.names]))
-testPreds <- (test_kap + test_rmse)/2
+# test_kap <- predict(clf, data.matrix(test[,feature.names]))
+# test_rmse <- predict(clf, data.matrix(test[,feature.names]))
+# testPreds <- (test_kap + test_rmse)/2
 
 ### Find optimal cutoff
 library(mlr)
