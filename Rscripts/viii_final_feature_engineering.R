@@ -286,25 +286,23 @@ if(clusterFeat){
         save(tsne_all, tsne_medi, tsne_insur, file = 'data/temp_tsne.RData')
         
         # 2. kmeans
-#         library(h2o) 
-#         localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
-#         kmeans_df <- as.h2o(localH2O, total_new[,feature.names])
-#         fit <- h2o.kmeans(kmeans_df, k = 8, max_iterations = 1000, standardize = T, init = 'Random', seed = 1989) #none, PlusPlus, Furthest, Random
-#         pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
-#         kmeans_all <- pred[,1]; table(kmeans_all)
-        fit <- kmeans(total_new[,feature.names], centers = 8, iter.max = 10000,
-                      nstart = 40)
+        library(h2o) 
+        localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
+        kmeans_df <- as.h2o(localH2O, total_new[,feature.names])
+        fit <- h2o.kmeans(kmeans_df, k = 8, max_iterations = 1000, standardize = T, init = 'Random', seed = 1989) #none, PlusPlus, Furthest, Random
+        pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
+        kmeans_all <- pred[,1]; table(kmeans_all)
         
         # 3. correlation distance
         library(caret)
         # all
-        centroids <- classDist(total_new[, feature.names], as.factor(total_new[, 'Response']), pca = T, keep = 280) 
+        centroids <- classDist(total_new[, feature.names], as.factor(total_new[, 'Response']), pca = T, keep = 275) 
         distances <- predict(centroids, total_new[, feature.names])
         distances <- as.data.frame(distances)
         distances_all <- distances[,-1]; names(distances_all) <- paste('DistALL', 1:8, sep = "")
         # medical
         feature.names1 <- grep('Medical_', feature.names, value=TRUE)
-        centroids <- classDist(total_new[, feature.names1], as.factor(total_new[, 'Response']), pca = T, keep = 150) 
+        centroids <- classDist(total_new[, feature.names1], as.factor(total_new[, 'Response']), pca = T, keep = 180) 
         distances <- predict(centroids, total_new[, feature.names1])
         distances <- as.data.frame(distances)
         distances_medi <- distances[,-1]; names(distances_medi) <- paste('DistMEDI', 1:8, sep = "")
@@ -337,6 +335,7 @@ if(clusterFeat){
         test <- total[which(total$Response == 0),]
     }
 }
+save(train, test, file = 'data/temp_train_test_3.RData')
 
 # 8. Split
 if(splitoutput){
@@ -385,10 +384,13 @@ if(splitoutput){
     
     train <- total[which(total$Response > 0),]
     test <- total[which(total$Response == 0),]
+    inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
+    validation <- train[inTraining,]
+    train <- train[-inTraining,]
     inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
     train_a <- train[-inTraining,]
     train_b <- train[inTraining,]
-    dim(train_b); dim(train_a); dim(test); dim(train)
+    dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
     save(train, train_b, train_a, validation, test, file = 'data/viii_train_test_validation_dummy.RData')
 }
 
