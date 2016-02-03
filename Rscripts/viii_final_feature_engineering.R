@@ -229,7 +229,7 @@ total <- rbind(train,test); table(total$Product_Info_2)
 levels(total$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)
 train <- total[which(total$Response > 0),]
 test <- total[which(total$Response == 0),]
-# save(train, test, file = 'data/temp_train_test_2.RData')
+save(train, test, file = 'data/temp_train_test_2.RData')
 
 # 6. dummy
 if(adddummy) {
