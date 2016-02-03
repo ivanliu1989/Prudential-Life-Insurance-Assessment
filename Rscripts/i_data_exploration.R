@@ -27,8 +27,8 @@ cate.features <- c("Product_Info_1", "Product_Info_2", "Product_Info_3", "Produc
                    "Medical_History_25", "Medical_History_26", "Medical_History_27", "Medical_History_28", "Medical_History_29", 
                    "Medical_History_30", "Medical_History_31", "Medical_History_33", "Medical_History_34", "Medical_History_35", 
                    "Medical_History_36", "Medical_History_37", "Medical_History_38", "Medical_History_39", "Medical_History_40", 
-                   "Medical_History_41",
-                   "KMEANS"
+                   "Medical_History_41"
+                   ,"KMEANS"
 )
 medical.keywords <- c(paste('Medical_Keyword_', 1:48, sep = ''))
 
@@ -36,32 +36,32 @@ head(train[,na.features]) # all Numerical (Continuous) or Numerical (Discrete) -
 test$Response <- 9
 
 # 2. remove low quality records
-removal_feat <- c('Product_Info_3', 'Product_Info_7', 'Employment_Info_2', 'InsuredInfo_3', 'Insurance_History_2', 'Insurance_History_3',
-                  'Medical_History_3', 'Medical_History_5', 'Medical_History_6', 'Medical_History_9', 'Medical_History_12', 
-                  'Medical_History_16', 'Medical_History_17', 'Medical_History_23', 'Medical_History_31', 'Medical_History_37',
-                  'Medical_History_41', 'Medical_History_2')
-for(f in removal_feat){
-    cat(f)
-    train[train[,f] %in% as.numeric(names(table(train[,f]))[!names(table(train[,f])) %in% names(table(test[,f]))]),f] <- -1
-}
-train[train$Product_Info_3 %in% c(1,3,5,12,13,16,18,20,22,27,32,38),]; test[test$Product_Info_3 %in% c(1,3,5,12,13,16,18,20,22,27,32,38),];
-train[train$Product_Info_7 %in% c(2),]; test[test$Product_Info_7 %in% c(2),];
-train[train$Employment_Info_2 %in% c(17,22,25,28,29,30,31,33,35,38),]; test[test$Employment_Info_2 %in% c(17,22,25,28,29,30,31,33,35,38),];
-train[train$InsuredInfo_3 %in% c(5,7),]; test[test$InsuredInfo_3 %in% c(5,7),]; nrow(train[train$InsuredInfo_3 %in% c(5,7),])
-train[train$Insurance_History_2 %in% c(2),]; test[test$Insurance_History_2 %in% c(2),]; nrow(train[train$Insurance_History_2 %in% c(2),])
-train[train$Insurance_History_3 %in% c(2),]; test[test$Insurance_History_3 %in% c(2),]; nrow(train[train$Insurance_History_3 %in% c(2),])
-train[train$Medical_History_3 %in% c(1),]; test[test$Medical_History_3 %in% c(1),]; nrow(train[train$Medical_History_3 %in% c(1),])
-train[train$Medical_History_5 %in% c(3),]; test[test$Medical_History_5 %in% c(3),]; nrow(train[train$Medical_History_5 %in% c(3),])
-train[train$Medical_History_6 %in% c(2),]; test[test$Medical_History_6 %in% c(2),]; nrow(train[train$Medical_History_6 %in% c(2),])
-train[train$Medical_History_9 %in% c(3),]; test[test$Medical_History_9 %in% c(3),]; nrow(train[train$Medical_History_9 %in% c(3),])
-train[train$Medical_History_12 %in% c(1),]; test[test$Medical_History_12 %in% c(1),]; nrow(train[train$Medical_History_12 %in% c(1),])
-train[train$Medical_History_16 %in% c(2),]; test[test$Medical_History_16 %in% c(2),]; nrow(train[train$Medical_History_16 %in% c(2),])
-train[train$Medical_History_17 %in% c(1),]; test[test$Medical_History_17 %in% c(1),]; nrow(train[train$Medical_History_17 %in% c(1),])
-train[train$Medical_History_23 %in% c(2),]; test[test$Medical_History_23 %in% c(2),]; nrow(train[train$Medical_History_23 %in% c(2),])
-train[train$Medical_History_31 %in% c(2),]; test[test$Medical_History_31 %in% c(2),]; nrow(train[train$Medical_History_31 %in% c(2),])
-train[train$Medical_History_37 %in% c(3),]; test[test$Medical_History_37 %in% c(3),]; nrow(train[train$Medical_History_37 %in% c(3),])
-train[train$Medical_History_41 %in% c(2),]; test[test$Medical_History_41 %in% c(2),]; nrow(train[train$Medical_History_41 %in% c(2),])
-Medical_History_2_feat <- as.numeric(names(table(train$Medical_History_2))[!names(table(train$Medical_History_2)) %in% names(table(test$Medical_History_2))])
+# removal_feat <- c('Product_Info_3', 'Product_Info_7', 'Employment_Info_2', 'InsuredInfo_3', 'Insurance_History_2', 'Insurance_History_3',
+#                   'Medical_History_3', 'Medical_History_5', 'Medical_History_6', 'Medical_History_9', 'Medical_History_12', 
+#                   'Medical_History_16', 'Medical_History_17', 'Medical_History_23', 'Medical_History_31', 'Medical_History_37',
+#                   'Medical_History_41', 'Medical_History_2')
+# for(f in removal_feat){
+#     cat(f)
+#     train[train[,f] %in% as.numeric(names(table(train[,f]))[!names(table(train[,f])) %in% names(table(test[,f]))]),f] <- -1
+# }
+# train[train$Product_Info_3 %in% c(1,3,5,12,13,16,18,20,22,27,32,38),]; test[test$Product_Info_3 %in% c(1,3,5,12,13,16,18,20,22,27,32,38),];
+# train[train$Product_Info_7 %in% c(2),]; test[test$Product_Info_7 %in% c(2),];
+# train[train$Employment_Info_2 %in% c(17,22,25,28,29,30,31,33,35,38),]; test[test$Employment_Info_2 %in% c(17,22,25,28,29,30,31,33,35,38),];
+# train[train$InsuredInfo_3 %in% c(5,7),]; test[test$InsuredInfo_3 %in% c(5,7),]; nrow(train[train$InsuredInfo_3 %in% c(5,7),])
+# train[train$Insurance_History_2 %in% c(2),]; test[test$Insurance_History_2 %in% c(2),]; nrow(train[train$Insurance_History_2 %in% c(2),])
+# train[train$Insurance_History_3 %in% c(2),]; test[test$Insurance_History_3 %in% c(2),]; nrow(train[train$Insurance_History_3 %in% c(2),])
+# train[train$Medical_History_3 %in% c(1),]; test[test$Medical_History_3 %in% c(1),]; nrow(train[train$Medical_History_3 %in% c(1),])
+# train[train$Medical_History_5 %in% c(3),]; test[test$Medical_History_5 %in% c(3),]; nrow(train[train$Medical_History_5 %in% c(3),])
+# train[train$Medical_History_6 %in% c(2),]; test[test$Medical_History_6 %in% c(2),]; nrow(train[train$Medical_History_6 %in% c(2),])
+# train[train$Medical_History_9 %in% c(3),]; test[test$Medical_History_9 %in% c(3),]; nrow(train[train$Medical_History_9 %in% c(3),])
+# train[train$Medical_History_12 %in% c(1),]; test[test$Medical_History_12 %in% c(1),]; nrow(train[train$Medical_History_12 %in% c(1),])
+# train[train$Medical_History_16 %in% c(2),]; test[test$Medical_History_16 %in% c(2),]; nrow(train[train$Medical_History_16 %in% c(2),])
+# train[train$Medical_History_17 %in% c(1),]; test[test$Medical_History_17 %in% c(1),]; nrow(train[train$Medical_History_17 %in% c(1),])
+# train[train$Medical_History_23 %in% c(2),]; test[test$Medical_History_23 %in% c(2),]; nrow(train[train$Medical_History_23 %in% c(2),])
+# train[train$Medical_History_31 %in% c(2),]; test[test$Medical_History_31 %in% c(2),]; nrow(train[train$Medical_History_31 %in% c(2),])
+# train[train$Medical_History_37 %in% c(3),]; test[test$Medical_History_37 %in% c(3),]; nrow(train[train$Medical_History_37 %in% c(3),])
+# train[train$Medical_History_41 %in% c(2),]; test[test$Medical_History_41 %in% c(2),]; nrow(train[train$Medical_History_41 %in% c(2),])
+# Medical_History_2_feat <- as.numeric(names(table(train$Medical_History_2))[!names(table(train$Medical_History_2)) %in% names(table(test$Medical_History_2))])
 
 # 3. combine train and test
 total <- rbind(train, test); dim(total)
@@ -106,7 +106,7 @@ sapply(names(total), function(x){mean(is.na(total[,x]))})
 cate.features <- c(cate.features, 'Product_Info_2_cate', 'Product_Info_2_num', 'Gender_Speci_feat')
 num.features <- names(total)[!names(total) %in% c(cate.features, 'Id', 'Response', medical.keywords)]
 
-load('data/i_cluster_feats.RData')
+# load('data/i_cluster_feats.RData')
 total_new <- cbind(total[,-which(names(total) %in% c('Response'))],  
                    Cnt_NA_row = Cnt_NA_row,
                    Cnt_NA_Emp_row = Cnt_NA_Emp_row,
@@ -118,7 +118,7 @@ total_new <- cbind(total[,-which(names(total) %in% c('Response'))],
                    Product_Info_2_cate = Product_Info_2_cate,
                    Product_Info_2_num = Product_Info_2_num,
                    Gender_Speci_feat = Gender_Speci_feat,
-                   tsne_all, KMEANS = kmeans_all,
+                   tsne_all, KMEANS = kmeans_all, distances_all,
                    Response = total$Response)
 for(c in cate.features){
     total_new[,c] <- as.factor(total_new[,c])
@@ -130,7 +130,7 @@ for(n in num.features){
 str(total_new[,num.features])
 sapply(names(total_new), function(x){mean(is.na(total_new[,x]))})
 
-levels(total_new$Product_Info_2) <- 1:length(levels(total_new$Product_Info_2))
+levels(total_new$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)#1:length(levels(total_new$Product_Info_2))
 table(total_new$Product_Info_2)
 
 ######################################
@@ -145,7 +145,7 @@ inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
 train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 dim(train_b); dim(train_a); dim(test); dim(train)
-save(train, train_b, train_a, test, file = 'data/fin_train_test_onehot.RData')
+save(train, train_b, train_a, test, file = 'data/fin_train_test.RData')
 # str(train[,num.features]); str(train[,cate.features])
 
 # Validation
@@ -158,7 +158,7 @@ train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 
 dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
-save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_onehot.RData')
+save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation.RData')
 # str(train[,num.features]); str(train[,cate.features])
 
 #######################################
@@ -167,8 +167,8 @@ save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_vali
 total_new <- cbind(data.frame(model.matrix(Response~.-1,total_new)), Response = total_new$Response)
 head(total_new);dim(total_new)
 
-prePro <- preProcess(total_new[, -c(1, ncol(total_new))],method = c('center', 'scale', 'pca'))
-total_new <- cbind(Id = total_new$Id, predict(prePro, total_new[, -c(1, ncol(total_new))]), Response = total_new$Response)
+# prePro <- preProcess(total_new[, -c(1, ncol(total_new))],method = c('center', 'scale', 'pca'))
+# total_new <- cbind(Id = total_new$Id, predict(prePro, total_new[, -c(1, ncol(total_new))]), Response = total_new$Response)
 
 #################################################
           # 6. tsne/kmeans/distance feature #####
@@ -187,36 +187,36 @@ pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
 kmeans_all <- pred[,1]; table(kmeans_all)
 
 library(caret)
-centroids <- classDist(as.matrix(total_new[, 2:127]), total_new[, 'Response']) #672
+centroids <- classDist(as.matrix(total_new[, feature.names]), as.factor(total_new[, 'Response']), pca = T, keep = 250) #672
+distances <- predict(centroids, as.matrix(total_new[, feature.names]))
+distances <- as.data.frame(distances)
+distances_all <- distances[,-9]; names(distances_all) <- paste('Dist_', 1:8, sep = "")
 # nzv <- nearZeroVar(total_new[, 2:672], saveMetrics= TRUE)
 # nzv[nzv$nzv,][1:10,]
 # comboInfo <- findLinearCombos(total_new[, 2:672])
 # comboInfo
 
-library(pdist)
-d <- pdist(total_new[, 2:672])
-
-save(tsne_ALL,kmeans_all,distance_all, file = 'data/i_cluster_feats.RData')
+save(tsne_ALL,kmeans_all,distances_all, file = 'data/i_cluster_feats.RData')
 
 #################################
          # 7. pca transform #####
          ########################
-preProcValues <- preProcess(total_new[,-c(1,ncol(total_new))], method = c("pca"))
-total_pca <- predict(preProcValues, total_new[,-c(1,ncol(total_new))])
-total_pca <- cbind(Id = total_new$Id, total_pca, Response = total_new$Response)
-
-train <- total_pca[total_pca$Response != 9, ]
-test <- total_pca[total_pca$Response == 9, ]
-library(caret)
-set.seed(1989)
-# Validation
-inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
-validation <- train[inTraining,]
-# Train a & b
-train <- train[-inTraining,]
-inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
-train_a <- train[-inTraining,]
-train_b <- train[inTraining,]
-
-dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
-save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_pca.RData')
+# preProcValues <- preProcess(total_new[,-c(1,ncol(total_new))], method = c("pca"))
+# total_pca <- predict(preProcValues, total_new[,-c(1,ncol(total_new))])
+# total_pca <- cbind(Id = total_new$Id, total_pca, Response = total_new$Response)
+# 
+# train <- total_pca[total_pca$Response != 9, ]
+# test <- total_pca[total_pca$Response == 9, ]
+# library(caret)
+# set.seed(1989)
+# # Validation
+# inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
+# validation <- train[inTraining,]
+# # Train a & b
+# train <- train[-inTraining,]
+# inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+# train_a <- train[-inTraining,]
+# train_b <- train[inTraining,]
+# 
+# dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
+# save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_pca.RData')

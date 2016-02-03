@@ -44,8 +44,12 @@ rm(list=ls());gc()
     # Combine the predictions on A and B. 
     # Use optim to get cutpoints based on the true training labels and your predictions
     set.seed(23)
-    dropitems <- c('Id','Response', importance_matrix$Feature[170:193]); 
-    importance_matrix <- read_csv('importance_matrix.csv')
+    # 128:151 NB XGB Meta
+    # 153:157 Cnt_NA
+    # 173:206 TSNE + Dist
+    # 162:172 custom_var
+    dropitems <- c('Id','Response', names(train)[c(128:151, 153:157, 162:172, 176:206)]); 
+    # importance_matrix <- read_csv('importance_matrix.csv')
     feature.names <- names(train)[!names(train) %in% dropitems] 
     dval          <- xgb.DMatrix(data=data.matrix(validation[,feature.names]),label=validation$Response) #-1
     dtrain        <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response) 
@@ -58,18 +62,19 @@ rm(list=ls());gc()
     
     clf <- xgb.train(data                = dtrain, # dtrain_a, dtrain_b, dtrain, dtrain_stack
                      nrounds             = 800, 
-                     early.stop.round    = 200,
+                     early.stop.round    = 100,
                      watchlist           = watchlist, # watchlist_ab, watchlist_ba, watchlist, watchlist_stack
-                     feval               = evalerror,
-                     # eval_metric         = 'rmse',
-                     maximize            = T,
+                     # feval               = evalerror,
+                     eval_metric         = 'rmse',
+                     # maximize            = TRUE,
+                     maximize            = FALSE,
                      verbose             = 1,
                      objective           = "reg:linear",  # multi:softmax, reg:linear, multi:softprob
                      booster             = "gbtree",
-                     eta                 = 0.05,
+                     eta                 = 0.035,
                      # gamma               = 0.05,
                      max_depth           = 6,
-                     min_child_weight    = 240,
+                     min_child_weight    = 3,
                      subsample           = 0.9,
                      colsample           = 0.67,
                      print.every.n       = 10
@@ -93,6 +98,7 @@ rm(list=ls());gc()
     importance_matrix <- xgb.importance(names, model = clf)
     xgb.plot.importance(importance_matrix)
     write.csv(importance_matrix, 'importance_matrix.csv')
+    
 ###################################
 # 2. Staked generalization ########
 ###################################
