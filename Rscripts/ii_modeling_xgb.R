@@ -5,10 +5,14 @@ library(Metrics)
 library(Hmisc)
 rm(list=ls());gc()
 
+# total_new <- rbind(train, validation, test)
+# nzv <- nearZeroVar(total_new[, 2:(ncol(total_new)-1)], saveMetrics= TRUE)
+# nzv[nzv$nzv,][1:10,]
+
 ##############################
           # 1. Read Data #####
           ####################
-    load('data/viii_train_test_validation.RData')
+    load('../data/viii_train_test_validation.RData')
 
 ##############################
           # 2. Eval Func #####
@@ -40,11 +44,8 @@ rm(list=ls());gc()
     # Combine the predictions on A and B. 
     # Use optim to get cutpoints based on the true training labels and your predictions
     set.seed(23)
-    dropitems <- c('Id','Response'#'Medical_History_10','Medical_History_24',
-                   # 'Cnt_NA_Emp_row','Cnt_NA_Fam_row','Cnt_NA_Medi_row','Cnt_NA_Ins_row'
-                   # 'Gender_Speci_feat'
-                   # , 'TSNE_1', 'TSNE_2', 'TSNE_3', 'KMEANS'
-                   )
+    dropitems <- c('Id','Response', importance_matrix$Feature[170:193]); 
+    importance_matrix <- read_csv('importance_matrix.csv')
     feature.names <- names(train)[!names(train) %in% dropitems] 
     dval          <- xgb.DMatrix(data=data.matrix(validation[,feature.names]),label=validation$Response) #-1
     dtrain        <- xgb.DMatrix(data=data.matrix(train[,feature.names]),label=train$Response) 
@@ -65,10 +66,10 @@ rm(list=ls());gc()
                      verbose             = 1,
                      objective           = "reg:linear",  # multi:softmax, reg:linear, multi:softprob
                      booster             = "gbtree",
-                     eta                 = 0.035,
+                     eta                 = 0.05,
                      # gamma               = 0.05,
                      max_depth           = 6,
-                     min_child_weight    = 3,
+                     min_child_weight    = 240,
                      subsample           = 0.9,
                      colsample           = 0.67,
                      print.every.n       = 10
@@ -91,7 +92,7 @@ rm(list=ls());gc()
     names <- dimnames(as.matrix(train[,feature.names]))[[2]]
     importance_matrix <- xgb.importance(names, model = clf)
     xgb.plot.importance(importance_matrix)
-
+    write.csv(importance_matrix, 'importance_matrix.csv')
 ###################################
 # 2. Staked generalization ########
 ###################################
