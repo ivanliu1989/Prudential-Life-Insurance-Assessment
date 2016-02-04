@@ -7,6 +7,7 @@ library(caret)
 # library(mlbench)
 rm(list=ls());gc()
 load('data/fin_train_test_validation_2.RData')
+load('data/fin_train_test_validation_xgb_meta.RData')
 
 ### Evaluation Func ###
 evalerror = function(preds, dtrain) {
