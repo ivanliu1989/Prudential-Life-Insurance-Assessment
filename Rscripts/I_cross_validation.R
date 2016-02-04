@@ -6,7 +6,7 @@ library(Hmisc)
 library(caret)
 # library(mlbench)
 rm(list=ls());gc()
-load('data/fin_train_test_validation.RData')
+load('data/fin_train_test_validation_2.RData')
 
 ### Evaluation Func ###
 evalerror = function(preds, dtrain) {
@@ -26,10 +26,11 @@ set.seed(23)
 train <- rbind(train, validation)
 cv <- 5
 folds <- createFolds(train$Response, k = cv, list = FALSE,)
-dropitems <- c('Id','Response') #, paste0('TSNE_', 1:3)
+dropitems <- c('Id','Response', paste0('TSNE_', 1:3), 'kmeans_all', 'Gender_Speci_feat', 'Medical_History_10', 'Medical_History_24')
 feature.names <- names(train)[!names(train) %in% dropitems] 
 sc <- preProcess(train[,feature.names],method = c('center', 'scale'))
 train_sc <- cbind(Id = train$Id, predict(sc, train[,feature.names]), Response = train$Response)
+# train_sc <- train
 
 ### Setup Results Table ###
 results <- as.data.frame(matrix(rep(0,10*cv), cv))
