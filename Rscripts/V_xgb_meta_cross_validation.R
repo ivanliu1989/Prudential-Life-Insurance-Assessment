@@ -6,7 +6,7 @@ library(Hmisc)
 library(caret)
 # library(mlbench)
 rm(list=ls());gc()
-load('data/fin_train_test_validation_2.RData')
+load('data/fin_train_test_validation_prod.RData')
 
 ### Evaluation Func ###
 evalerror = function(preds, dtrain) {
@@ -104,7 +104,7 @@ test_meta <- cbind(Id = test_sc[,'Id'], test_sc[,feature.names], validPreds, Res
 # 4. Split/Output Data #####
 ############################
 train <- train_meta
-test <- test
+test <- test_meta
 library(caret)
 set.seed(1989)
 # No validation
@@ -112,7 +112,7 @@ inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
 train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 dim(train_b); dim(train_a); dim(test); dim(train)
-save(train, train_b, train_a, test, file = 'data/fin_train_test_xgb_meta.RData')
+save(train, train_b, train_a, test, file = 'data/V_train_test_xgb_meta_NEW.RData')
 
 # Validation
 inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
@@ -124,4 +124,4 @@ train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 
 dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
-save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_xgb_meta.RData')
+save(train, train_b, train_a, validation, test, file = 'data/V_train_test_valid_xgb_meta_NEW.RData')
