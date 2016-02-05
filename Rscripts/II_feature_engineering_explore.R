@@ -52,7 +52,7 @@ for(c in cate.features){
 # levels(total_new$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)#1:length(levels(total_new$Product_Info_2))
 dummies <- dummyVars(Response ~ ., data = total_new[,c('Product_Info_2', 'Response')], sep = "_", levelsOnly = FALSE, fullRank = TRUE)
 total1 <- as.data.frame(predict(dummies, newdata = total_new))
-total_new <- cbind(total_new[,-3], total1, Response=total_new$Response)
+total_new <- cbind(total_new[,-c(3,ncol(total_new))], total1, Response=total_new$Response)
 
 levels(total_new$Product_Info_2_cate) <- c(1:5)
 for(c in cate.features){
@@ -107,7 +107,7 @@ pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
 kmeans_all <- pred[,1]; table(kmeans_all)
 
 library(caret)
-centroids <- classDist(as.matrix(total_new[, feature.names]), as.factor(total_new[, 'Response']), pca = T, keep = 149) #672
+centroids <- classDist(as.matrix(total_new[, feature.names]), as.factor(total_new[, 'Response']), pca = T, keep = 141) #672
 distances <- predict(centroids, as.matrix(total_new[, feature.names]))
 distances <- as.data.frame(distances)
 distances_all <- distances[,-1]; names(distances_all) <- paste('Dist_', 1:8, sep = "")

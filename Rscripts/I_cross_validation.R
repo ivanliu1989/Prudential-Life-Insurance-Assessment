@@ -28,8 +28,8 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 set.seed(23)
 train <- rbind(train, validation)
 cv <- 10
-folds <- createFolds(train$Response, k = cv, list = FALSE,)
-dropitems <- c('Id','Response', paste0('TSNE_', 1:3), 'kmeans_all', 'Gender_Speci_feat')
+folds <- createFolds(as.factor(train$Response), k = cv, list = FALSE,)
+dropitems <- c('Id','Response')#, paste0('TSNE_', 1:3), 'kmeans_all', 'Gender_Speci_feat')
 feature.names <- names(train)[!names(train) %in% dropitems] 
 sc <- preProcess(train[,feature.names],method = c('center', 'scale'))
 train_sc <- cbind(Id = train$Id, predict(sc, train[,feature.names]), Response = train$Response)
