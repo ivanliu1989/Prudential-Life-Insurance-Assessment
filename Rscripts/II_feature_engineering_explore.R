@@ -35,7 +35,7 @@ for(i in na.features){
 sapply(names(total), function(x){mean(is.na(total[,x]))})
 
 # Categorical
-load('data/i_cluster_feats.RData')
+load('data/i_cluster_feats_dist.RData')
 cate.features <- c('Product_Info_2_cate', 'Product_Info_2')
 total_new <- cbind(total[,-which(names(total) %in% c('Response'))],  
                    Cnt_NA_row = Cnt_NA_row,
@@ -43,13 +43,17 @@ total_new <- cbind(total[,-which(names(total) %in% c('Response'))],
                    BMI_InsAge = BMI_InsAge,
                    Product_Info_2_cate = Product_Info_2_cate,
                    Product_Info_2_num = Product_Info_2_num,
-                   Gender_Speci_feat = Gender_Speci_feat,
-                   tsne_all, kmeans_all = kmeans_all, distances_all,
+                   # Gender_Speci_feat = Gender_Speci_feat, tsne_all, kmeans_all = kmeans_all, 
+                   distances_all,
                    Response = total$Response)
 for(c in cate.features){
   total_new[,c] <- as.factor(total_new[,c])
 }
-levels(total_new$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)#1:length(levels(total_new$Product_Info_2))
+# levels(total_new$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)#1:length(levels(total_new$Product_Info_2))
+dummies <- dummyVars(Response ~ ., data = total_new[,c('Product_Info_2', 'Response')], sep = "_", levelsOnly = FALSE, fullRank = TRUE)
+total1 <- as.data.frame(predict(dummies, newdata = total_new))
+total_new <- cbind(total_new[,-3], total1, Response=total_new$Response)
+
 levels(total_new$Product_Info_2_cate) <- c(1:5)
 for(c in cate.features){
   total_new[,c] <- as.numeric(total_new[,c])
@@ -70,7 +74,7 @@ inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
 train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 dim(train_b); dim(train_a); dim(test); dim(train)
-save(train, train_b, train_a, test, file = 'data/fin_train_test.RData')
+save(train, train_b, train_a, test, file = 'data/fin_train_test_prod.RData')
 
 # Validation
 inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
@@ -82,7 +86,7 @@ train_a <- train[-inTraining,]
 train_b <- train[inTraining,]
 
 dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
-save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation.RData')
+save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_prod.RData')
 
 
 # Clustering
@@ -103,9 +107,9 @@ pred <- as.data.frame(h2o.predict(object = fit, newdata = kmeans_df))
 kmeans_all <- pred[,1]; table(kmeans_all)
 
 library(caret)
-centroids <- classDist(as.matrix(total_new[, feature.names]), as.factor(total_new[, 'Response']), pca = T, keep = 120) #672
+centroids <- classDist(as.matrix(total_new[, feature.names]), as.factor(total_new[, 'Response']), pca = T, keep = 149) #672
 distances <- predict(centroids, as.matrix(total_new[, feature.names]))
 distances <- as.data.frame(distances)
 distances_all <- distances[,-1]; names(distances_all) <- paste('Dist_', 1:8, sep = "")
 
-save(tsne_all,kmeans_all,distances_all, file = 'data/i_cluster_feats.RData') #kmeans_all,
+save(distances_all, file = 'data/i_cluster_feats_dist.RData') #kmeans_all,

@@ -76,7 +76,7 @@ for(i in 1:cv){
 # For test data
 dtest          <- xgb.DMatrix(data=data.matrix(test_sc[,feature.names]),label=test_sc[,'Response']-1)
 dtrain        <- xgb.DMatrix(data=data.matrix(train_sc[,feature.names]),label=train_sc[,'Response']-1) 
-watchlist     <- list(val=dtest,train=dtrain)
+watchlist     <- list(val=dtrain,train=dtrain)
 
 clf <- xgb.train(data                = dtrain,
                  nrounds             = 800, 
