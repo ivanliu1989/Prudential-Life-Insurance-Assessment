@@ -8,8 +8,8 @@ library(caret)
 # library(mlbench)
 rm(list=ls());gc()
 # load('data/fin_train_test_validation_prod.RData')
-load('data/V_train_test_valid_xgb_meta.RData')
-# load('data/fin_train_test_validation_xgb_leaf.RData')
+# load('data/V_train_test_valid_xgb_meta_NEW.RData')
+load('data/VII_train_test_xgb_leaf.RData')
 
 ### Evaluation Func ###
 evalerror = function(preds, dtrain) {
@@ -26,14 +26,13 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 
 ### Split Data ###
 set.seed(23)
-train <- rbind(train, validation)
 cv <- 10
 folds <- createFolds(as.factor(train$Response), k = cv, list = FALSE,)
 dropitems <- c('Id','Response')#, paste0('TSNE_', 1:3), 'kmeans_all', 'Gender_Speci_feat')
 feature.names <- names(train)[!names(train) %in% dropitems] 
-sc <- preProcess(train[,feature.names],method = c('center', 'scale'))
-train_sc <- cbind(Id = train$Id, predict(sc, train[,feature.names]), Response = train$Response)
-# train_sc <- train
+# sc <- preProcess(train[,feature.names],method = c('center', 'scale'))
+# train_sc <- cbind(Id = train$Id, predict(sc, train[,feature.names]), Response = train$Response)
+train_sc <- train
 
 ### Setup Results Table ###
 results <- as.data.frame(matrix(rep(0,11*cv), cv))
@@ -48,8 +47,8 @@ for(i in 1:cv){
   watchlist     <- list(val=dval,train=dtrain)
   
   clf <- xgb.train(data                = dtrain,
-                   nrounds             = 800, 
-                   early.stop.round    = 200,
+                   nrounds             = 850, 
+                   early.stop.round    = 50,
                    watchlist           = watchlist,
                    feval               = evalerror,
                    # eval_metric         = 'rmse',
@@ -60,7 +59,7 @@ for(i in 1:cv){
                    max_depth           = 6,
                    min_child_weight    = 3,
                    subsample           = 0.8,
-                   colsample           = 0.67,
+                   colsample           = 0.7,
                    print.every.n       = 10
   )
   

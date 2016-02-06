@@ -1,5 +1,5 @@
 setwd('/Users/ivanliu/Downloads/Prudential-Life-Insurance-Assessment')
-setwd('C:/Users/iliu2/Documents/Prudential-Life-Insurance-Assessment-master')
+# setwd('C:/Users/iliu2/Documents/Prudential-Life-Insurance-Assessment-master')
 library(readr)
 library(xgboost)
 library(Metrics)
@@ -7,8 +7,8 @@ library(Hmisc)
 library(caret)
 # library(mlbench)
 rm(list=ls());gc()
-load('data/fin_train_test_validation_prod.RData')
-# load('data/fin_train_test_validation_xgb_meta.RData')
+# load('data/fin_train_test_validation_prod.RData')
+load('data/V_train_test_valid_xgb_meta_NEW.RData')
 
 ### Evaluation Func ###
 evalerror = function(preds, dtrain) {
@@ -28,7 +28,7 @@ set.seed(23)
 train <- rbind(train, validation)
 cv <- 10
 folds <- createFolds(as.factor(train$Response), k = cv, list = FALSE,)
-dropitems <- c('Id','Response')#, paste0('TSNE_', 1:3), 'kmeans_all', 'Gender_Speci_feat')
+dropitems <- c('Id','Response', paste0('xgb_meta_', 1:8))
 feature.names <- names(train)[!names(train) %in% dropitems] 
 train_sc <- train
 test_sc <- test
@@ -54,18 +54,18 @@ for(i in 1:cv){
                    maximize            = TRUE,
                    objective           = "reg:linear",
                    booster             = "gbtree",
-                   eta                 = 0.5,
+                   eta                 = 0.6,
                    max_depth           = 6,
-                   min_child_weight    = 3,
+                   min_child_weight    = 200,
                    subsample           = 0.8,
                    colsample           = 0.67,
-                   print.every.n       = 10
+                   print.every.n       = 1
   )
   
   ### Make predictions
   validPreds <- as.data.frame(predict(clf, dval, predleaf = TRUE))
   names(validPreds) <- c(paste0('xgb_leaf_', 1:16))
-  train_sub <- cbind(Id = train_sc[f,'Id'], train_sc[f,feature.names], validPreds, Response = train_sc[f,'Response'])
+  train_sub <- cbind(train_sc[f,-ncol(train_sc)], validPreds, Response = train_sc[f,'Response'])
   if(i==1){
     train_meta <- train_sub
   }else{
@@ -85,41 +85,39 @@ clf <- xgb.train(data                = dtrain,
                  maximize            = TRUE,
                  objective           = "reg:linear",
                  booster             = "gbtree",
-                 eta                 = 0.5,
-                 max_depth           = 7,
-                 min_child_weight    = 3,
+                 eta                 = 0.6,
+                 max_depth           = 6,
+                 min_child_weight    = 200,
                  subsample           = 0.8,
                  colsample           = 0.67,
-                 print.every.n       = 10
+                 print.every.n       = 1
 )
 
 ### Make predictions
 validPreds <- as.data.frame(predict(clf, dtest, predleaf = TRUE))
 names(validPreds) <- c(paste0('xgb_leaf_', 1:16))
-test_meta <- cbind(Id = test_sc[,'Id'], test_sc[,feature.names], validPreds, Response = test_sc[,'Response'])
+test_meta <- cbind(test_sc[,-ncol(test_sc)], validPreds, Response = test_sc[,'Response'])
 
 ######################################
 # 4. Split/Output Data #####
 ############################
-train <- train_meta
-test <- test_meta
+total_new <- rbind(train_meta, test_meta)
+for (col in paste0('xgb_leaf_',1:16)){
+    total_new[,col] <- as.factor(total_new[,col])
+}
+dummies <- dummyVars(Response ~ ., data = total_new[,c(paste0("xgb_leaf_", 1:16), 'Response')], 
+                     sep = "_", levelsOnly = FALSE, fullRank = TRUE)
+total1 <- as.data.frame(predict(dummies, newdata = total_new))
+total_new <- cbind(total_new[,-c(ncol(total_new))], total1, Response=total_new$Response)
+
+train <- total_new[total_new$Response != 0, ]
+test <- total_new[total_new$Response == 0, ]
+
 library(caret)
 set.seed(1989)
 # No validation
-inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
-train_a <- train[-inTraining,]
-train_b <- train[inTraining,]
-dim(train_b); dim(train_a); dim(test); dim(train)
-save(train, train_b, train_a, test, file = 'data/fin_train_test_xgb_leaf.RData')
-
-# Validation
-inTraining <- createDataPartition(train$Response, p = .2, list = FALSE)
-validation <- train[inTraining,]
-# Train a & b
-train <- train[-inTraining,]
-inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
-train_a <- train[-inTraining,]
-train_b <- train[inTraining,]
-
-dim(train_b); dim(train_a); dim(validation); dim(test); dim(train)
-save(train, train_b, train_a, validation, test, file = 'data/fin_train_test_validation_xgb_leaf.RData')
+# inTraining <- createDataPartition(train$Response, p = .5, list = FALSE)
+# train_a <- train[-inTraining,]
+# train_b <- train[inTraining,]
+# dim(train_b); dim(train_a); dim(test); dim(train)
+save(train, test, file = 'data/VII_train_test_xgb_leaf.RData')
