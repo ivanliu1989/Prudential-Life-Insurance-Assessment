@@ -7,7 +7,7 @@ library(Hmisc)
 library(caret)
 # library(mlbench)
 rm(list=ls());gc()
-# load('data/fin_train_test_validation_prod.RData')
+# load('data/fin_train_test_prod.RData')
 # load('data/V_train_test_valid_xgb_meta_NEW.RData')
 load('data/VII_train_test_xgb_leaf.RData')
 
@@ -25,7 +25,7 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
 }
 
 ### Split Data ###
-set.seed(23)
+set.seed(1989)
 cv <- 10
 folds <- createFolds(as.factor(train$Response), k = cv, list = FALSE,)
 dropitems <- c('Id','Response')#, paste0('TSNE_', 1:3), 'kmeans_all', 'Gender_Speci_feat')
@@ -57,7 +57,7 @@ for(i in 1:cv){
                    booster             = "gbtree",
                    eta                 = 0.035,
                    max_depth           = 6,
-                   min_child_weight    = 3,
+                   min_child_weight    = 240,
                    subsample           = 0.8,
                    colsample           = 0.7,
                    print.every.n       = 10
