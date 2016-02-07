@@ -24,9 +24,11 @@ mthd <- 'GLM' # GBM, DL, RF, GLM
 # 3. Model strategies ##### 
 cv <- 10
 folds <- createFolds(as.factor(train$Response), k = cv, list = FALSE,)
-leaf.names <- grep('xgb_leaf', names(train))
-names(train)[leaf.names] <- paste0('xgb_leaf_', 1:length(leaf.names))
-independent <- colnames(train)[2:155]#c(2:(ncol(train)-1))
+# leaf.names <- grep('xgb_leaf', names(train))
+# names(train)[leaf.names] <- paste0('xgb_leaf_', 1:length(leaf.names))
+dropitems <- c('Id','Response')#, paste0('TSNE_', 1:3), 'kmeans_all', 'Gender_Speci_feat')
+independent <- names(train)[!names(train) %in% dropitems] 
+# independent <- colnames(train)[2:155]#c(2:(ncol(train)-1))
 dependent <- "Response"
 
 ### Setup Results Table ###

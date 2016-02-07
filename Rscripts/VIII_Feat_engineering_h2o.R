@@ -137,8 +137,23 @@ levels(total$Product_Info_2_cate) <- c(1:5)
 train <- total[which(total$Response > 0),]
 test <- total[which(total$Response == 0),]
 
+# dummy
+test$Response <- 0
+#All_Data <- rbind(train,test) 
+dummies <- dummyVars(Response ~ ., data = train, sep = "_", levelsOnly = FALSE, fullRank = TRUE)
+train1 <- as.data.frame(predict(dummies, newdata = train))
+test_dum <- as.data.frame(predict(dummies, newdata = test))
+train_dum <- cbind(train1, Response=train$Response)
+# head(train_dum[,names(table(names(train_dum))[table(names(train_dum))==2])])
+zv <- names(table(names(train_dum))[table(names(train_dum))==2])
+names(train_dum[,which(names(train_dum) %in% zv)])
+test_dum <- test_dum[,-which(names(test_dum) %in% zv)]
+
+
 # Split
 library(caret)
+train <- train_dum
+test <- test_dum
 set.seed(1989)
 # No validation
 dim(test); dim(train)
