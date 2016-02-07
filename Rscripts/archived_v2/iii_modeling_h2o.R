@@ -10,9 +10,7 @@ options(scipen=999);set.seed(19890624)
 localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
 
 # 1. Read Data #####
-# load('data/fin_train_test_prod.RData')
-# load('data/V_train_test_valid_xgb_meta_NEW.RData')
-load('data/VII_train_test_xgb_leaf.RData')
+load('data/fin_train_test_regression.RData')
 mthd <- 'GLM' # GBM, DL, RF, GLM
 
 # 2. Eval Func #####
@@ -42,6 +40,7 @@ for(i in 1:cv){
     validation_df     <- as.h2o(localH2O, train[f,]) 
     validation        <- train[f,]
     if(mthd == 'GBM'){
+        print('Start training GBM...')
         fit <- h2o.gbm(
             y = dependent, x = independent, training_frame = train_df, 
             ntrees = 800, max_depth = 6, min_rows = 2,
@@ -50,19 +49,21 @@ for(i in 1:cv){
         )
     }
     else if(mthd == 'DL'){
+        print('Start training Deep Learning...')
         fit <-
             h2o.deeplearning(
                 y = dependent, x = independent, training_frame = train_df, overwrite_with_best_model = T, #autoencoder
                 use_all_factor_levels = T, activation = "RectifierWithDropout",#TanhWithDropout "RectifierWithDropout"
-                hidden = c(300,150,75), epochs = 9, train_samples_per_iteration = -2, adaptive_rate = T, rho = 0.99,  #c(300,150,75)
+                hidden = c(256,128), epochs = 90, train_samples_per_iteration = -2, adaptive_rate = T, rho = 0.99,  #c(300,150,75)
                 epsilon = 1e-6, rate = 0.01, rate_decay = 0.9, momentum_start = 0.9, momentum_stable = 0.99,
-                nesterov_accelerated_gradient = T, input_dropout_ratio = 0.25, hidden_dropout_ratios = c(0.25,0.25,0.25), 
-                l1 = NULL, l2 = 3e-5, loss = 'MeanSquare', classification_stop = 0.01,
+                nesterov_accelerated_gradient = T, input_dropout_ratio = 0.5, hidden_dropout_ratios = c(0.5,0.5), 
+                l1 = 1e-5, l2 = 3e-5, loss = 'MeanSquare', classification_stop = 0.01,
                 diagnostics = T, variable_importances = F, fast_mode = F, ignore_const_cols = T,
-                force_load_balance = T, replicate_training_data = T, shuffle_training_data = T
+                force_load_balance = F, replicate_training_data = T, shuffle_training_data = T
             )
     }
     else if(mthd == 'RF'){
+        print('Start training Random Forest...')
         fit <-
             h2o.randomForest(
                 y = dependent, x = independent, training_frame = train_df, mtries = -1, 
@@ -71,6 +72,7 @@ for(i in 1:cv){
             )
     }
     else if(mthd == 'GLM'){
+        print('Start training GLM...')
         fit <-
             h2o.glm(
                 y = dependent, x = independent, training_frame = train_df, #train_df | total_df
@@ -83,6 +85,7 @@ for(i in 1:cv){
         #     "tweedie": "tweedie"
     }
     
+    print(fit)
     validPreds <- as.data.frame(h2o.predict(object = fit, newdata = validation_df))
     kappa <- evalerror_2(preds = validPreds$predict, labels = validation$Response)  
     ### Find optimal cutoff
@@ -95,7 +98,7 @@ for(i in 1:cv){
     fix_kappa = evalerror_2(preds = validPredsFix, labels = train[f,'Response'])
     
     results[i,1:11] <- c(paste0('CV_', i), -kappa, -optimal_kappa, -fix_kappa, optCuts$par)
-    
+    View(results)
     # pred_h2o_gbm <- validPreds$predict
     # pred_h2o_glm <- validPreds$predict
     # pred_h2o_rf <- validPreds$predict
