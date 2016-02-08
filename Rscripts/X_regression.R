@@ -23,6 +23,7 @@ cate.features <- c("Product_Info_1", "Product_Info_2", "Product_Info_3", "Produc
                    "Medical_History_30", "Medical_History_31", "Medical_History_33", "Medical_History_34", "Medical_History_35", 
                    "Medical_History_36", "Medical_History_37", "Medical_History_38", "Medical_History_39", "Medical_History_40", 
                    "Medical_History_41"
+                   ,'Product_Info_2_cate', 'Product_Info_2_num'
 )
 medical.keywords <- c(paste('Medical_Keyword_', 1:48, sep = ''))
 test$Response <- 0
@@ -110,9 +111,39 @@ for (f in cate.features) {
 }
 total <- rbind(train,test); table(total$Product_Info_2)
 levels(total$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)
-levels(total$Product_Info_2_cate) <- c(1:5)
+levels(total$Product_Info_2_cate)
+levels(total$Product_Info_2_num)
 train <- total[which(total$Response > 0),]
 test <- total[which(total$Response == 0),]
+
+# train <- train[,!(names(train) %in% cate.features)]
+# test <- test[,!(names(test) %in% cate.features)]
+
+# dummy
+test$Response <- 0
+#All_Data <- rbind(train,test) 
+dummies <- dummyVars(Response ~ ., data = train, sep = "_", levelsOnly = FALSE, fullRank = TRUE)
+train1 <- as.data.frame(predict(dummies, newdata = train))
+test_dum <- as.data.frame(predict(dummies, newdata = test))
+train_dum <- cbind(train1, Response=train$Response)
+
+library(h2o)
+localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
+test_dum$Response <- 0
+total_dum <- rbind(train_dum, test_dum)
+total_df    <- as.h2o(localH2O, total_dum[,2:(ncol(total_dum)-1)])
+total_pca <- h2o.prcomp(training_frame=total_df, transform = 'STANDARDIZE', k = 800)
+total_pca = h2o.predict(object = total_pca, newdata = total_df)
+total.pca <- cbind(Id = total_dum$Id, as.data.frame(total_pca), Response = total_dum$Response)
+
+library(caret)
+names(total_dum) <- c('Id', paste0('Var_', 1:(ncol(total_dum)-2)), 'Response')
+pcafit <- preProcess(as.matrix(total_dum[,2:(ncol(total_dum)-1)]), method = c('pca'), thresh = 0.99, na.remove = TRUE)
+total.pca
+
+train <- total.pca[,total.pca$Response > 0]
+test <- total.pca[,total.pca$Response == 0]
+save(train,test, file='data/find_regression_pca.RData')
 
 ##################
 ### Caret ########
@@ -125,6 +156,7 @@ evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
     err = Metrics::ScoreQuadraticWeightedKappa(as.numeric(labels), preds, 1, 8)
     return(-err)
 }
+# numerical
 # for (f in names(train)) {
 #     train[,f] <- as.numeric(train[,f])
 # }
@@ -136,44 +168,129 @@ results <- as.data.frame(matrix(rep(0,11*cv), cv))
 names(results) <- c('cv_num', 'kappa', 'optim_kappa', 'fixed_kappa', '1st_cut', '2nd_cut', 
                     '3rd_cut', '4th_cut', '5th_cut', '6th_cut', '7th_cut')
 
+# ### Start Training ###
+# for(i in 1:cv){
+#     f <- folds==i
+#     val <- train[f,c(feature.names, 'Response')]
+#     tra <- train[!f,c(feature.names, 'Response')]
+#     # setting 1
+#     fitControl <- trainControl(method = "adaptive_cv",
+#                                number = 5,
+#                                repeats = 2,
+#                                classProbs = FALSE,
+#                                # summaryFunction = RMSE,
+#                                adaptive = list(min = 8,
+#                                                alpha = 0.05,
+#                                                method = "gls", #gls  BT
+#                                                complete = TRUE))
+#     # setting 2
+# #     fitControl <- trainControl(method = "cv",
+# #                                number = 5,
+# #                                classProbs = FALSE)
+# #     gbmGrid <-  expand.grid(mtry = 18)
+#     # training
+#     fit <- caret::train(x = tra[,feature.names],
+#                         y = as.numeric(tra$Response),
+#                         method = "leapSeq",
+#                         trControl = fitControl,
+#                         preProcess = c("center", "scale"), # pca
+#                         tuneLength = 8,
+#                         metric = "RMSE", # Rsquared, Kappa
+#                         maximize = FALSE
+#                         # ,tuneGrid = gbmGrid
+#     ) 
+#     
+#     ### Make predictions
+#     validPreds <- predict(fit, val)
+#     kappa = evalerror_2(preds = as.numeric(validPreds), labels = val[,'Response'])
+#     ### Find optimal cutoff
+#     optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = as.numeric(validPreds), labels = val[,'Response'], 
+#                     method = 'Nelder-Mead', control = list(maxit = 900000, trace = TRUE, REPORT = 500))
+#     validPredsOptim = as.numeric(Hmisc::cut2(as.numeric(validPreds), c(-Inf, optCuts$par, Inf))); table(validPredsOptim)
+#     optimal_kappa = evalerror_2(preds = validPredsOptim, labels = val[,'Response'])
+#     fix_cut <- c(2.6121,	3.3566,	4.1097,	5.0359,	5.5267,	6.4481,	6.7450)
+#     
+#     validPredsFix = as.numeric(Hmisc::cut2(as.numeric(validPreds), c(-Inf, fix_cut, Inf)));
+#     fix_kappa = evalerror_2(preds = validPredsFix, labels = val[,'Response'])
+#     
+#     results[i,1:11] <- c(paste0('CV_', i), -kappa, -optimal_kappa, -fix_kappa, optCuts$par)
+#     View(results)
+# }
+
+library(h2o)
+localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
+independent <- feature.names
+dependent <- "Response"
+mthd = 'GBM'
 ### Start Training ###
 for(i in 1:cv){
     f <- folds==i
-    val <- train[f,c(feature.names, 'Response')]
-    tra <- train[!f,c(feature.names, 'Response')]
+    train_df          <- as.h2o(localH2O, train[!f,])
+    validation_df     <- as.h2o(localH2O, train[f,]) 
+    validation        <- train[f,]
+    if(mthd == 'GBM'){
+        print('Start training GBM...')
+        fit <- h2o.gbm(
+            y = dependent, x = independent, training_frame = train_df, 
+            ntrees = 800, max_depth = 6, min_rows = 2,
+            learn_rate = 0.035, distribution = "gaussian", #multinomial, gaussian
+            nbins_cats = 20, importance = F
+        )
+    }
+    else if(mthd == 'DL'){
+        print('Start training Deep Learning...')
+        fit <-
+            h2o.deeplearning(
+                y = dependent, x = independent, training_frame = train_df, overwrite_with_best_model = T, #autoencoder
+                use_all_factor_levels = T, activation = "RectifierWithDropout",#TanhWithDropout "RectifierWithDropout"
+                hidden = c(256,128), epochs = 90, train_samples_per_iteration = -2, adaptive_rate = T, rho = 0.99,  #c(300,150,75)
+                epsilon = 1e-6, rate = 0.01, rate_decay = 0.9, momentum_start = 0.9, momentum_stable = 0.99,
+                nesterov_accelerated_gradient = T, input_dropout_ratio = 0.5, hidden_dropout_ratios = c(0.5,0.5), 
+                l1 = 1e-5, l2 = 3e-5, loss = 'MeanSquare', classification_stop = 0.01,
+                diagnostics = T, variable_importances = F, fast_mode = F, ignore_const_cols = T,
+                force_load_balance = F, replicate_training_data = T, shuffle_training_data = T
+            )
+    }
+    else if(mthd == 'RF'){
+        print('Start training Random Forest...')
+        fit <-
+            h2o.randomForest(
+                y = dependent, x = independent, training_frame = train_df, mtries = -1, 
+                ntrees = 800, max_depth = 16, sample.rate = 0.632, min_rows = 1, 
+                nbins = 20, nbins_cats = 1024, binomial_double_trees = T
+            )
+    }
+    else if(mthd == 'GLM'){
+        print('Start training GLM...')
+        fit <-
+            h2o.glm(
+                y = dependent, x = independent, training_frame = train_df, #train_df | total_df
+                max_iterations = 1000, beta_epsilon = 1e-1, solver = "IRLSM", #IRLSM  L_BFGS
+                standardize = T, family = 'gaussian', link = 'identity', alpha = 0.5, # 1 lasso 0 ridge
+                lambda = 1e-12, lambda_search = T, nlambda = 55, lambda_min_ratio = 1e-08,
+                intercept = T
+            )
+        #     "gaussian": "identity", "log"
+        #     "tweedie": "tweedie"
+    }
     
-    fitControl2 <- trainControl(method = "adaptive_cv",
-                                number = 10,
-                                repeats = 2,
-                                classProbs = FALSE,
-                                # summaryFunction = RMSE,
-                                adaptive = list(min = 10,
-                                                alpha = 0.05,
-                                                method = "gls",
-                                                complete = TRUE))
-    fit <- caret::train(x = tra[,feature.names],
-                 y = tra$Response,
-                 method = "leapSeq",
-                 trControl = fitControl2,
-                 preProcess = c("center", "scale"), # pca
-                 tuneLength = 8,
-                 metric = "RMSE", # Rsquared, Kappa
-                 maximize = FALSE
-                 ) 
-    
-    ### Make predictions
-    validPreds <- predict(fit, val)
-    kappa = evalerror_2(preds = validPreds, labels = val[,'Response'])
+    print(fit)
+    validPreds <- as.data.frame(h2o.predict(object = fit, newdata = validation_df))
+    kappa <- evalerror_2(preds = validPreds$predict, labels = validation$Response)  
     ### Find optimal cutoff
-    optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds, labels = val[,'Response'], 
-                    method = 'Nelder-Mead', control = list(maxit = 900000, trace = TRUE, REPORT = 500))
-    validPredsOptim = as.numeric(Hmisc::cut2(validPreds, c(-Inf, optCuts$par, Inf))); table(validPredsOptim)
-    optimal_kappa = evalerror_2(preds = validPredsOptim, labels = val[,'Response'])
-    fix_cut <- c(2.6121,	3.3566,	4.1097,	5.0359,	5.5267,	6.4481,	6.7450)
-    
-    validPredsFix = as.numeric(Hmisc::cut2(validPreds, c(-Inf, fix_cut, Inf)));
-    fix_kappa = evalerror_2(preds = validPredsFix, labels = val[,'Response'])
+    optCuts = optim(seq(1.5, 7.5, by = 1), evalerror_2, preds = validPreds$predict, labels = validation$Response, 
+                    method = 'Nelder-Mead', control = list(maxit = 30000, trace = TRUE, REPORT = 500))
+    validPredsOptim = as.numeric(Hmisc::cut2(validPreds$predict, c(-Inf, optCuts$par, Inf))); table(validPredsOptim)
+    optimal_kappa <- evalerror_2(preds = validPredsOptim, labels = validation$Response)
+    fix_cut <- c(2.6121, 3.3566, 4.1097, 5.0359, 5.5267, 6.4481, 6.7450)
+    validPredsFix = as.numeric(Hmisc::cut2(validPreds[,1], c(-Inf, fix_cut, Inf)));
+    fix_kappa = evalerror_2(preds = validPredsFix, labels = train[f,'Response'])
     
     results[i,1:11] <- c(paste0('CV_', i), -kappa, -optimal_kappa, -fix_kappa, optCuts$par)
     View(results)
+    # pred_h2o_gbm <- validPreds$predict
+    # pred_h2o_glm <- validPreds$predict
+    # pred_h2o_rf <- validPreds$predict
+    # pred_h2o_dl <- validPreds$predict
+    # validPreds$predict <- (pred_h2o_gbm + pred_h2o_rf + pred_h2o_glm + pred_h2o_dl)/4
 }
