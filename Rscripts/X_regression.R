@@ -96,12 +96,15 @@ for(i in na.features){
     All_Data[is.na(All_Data[,i]),i] <- median(All_Data[,i], na.rm = T)
 }
 sapply(names(All_Data), function(x){mean(is.na(All_Data[,x]))})
+All_Data$Product_Info_2 <- as.factor(All_Data$Product_Info_2)
+All_Data$Product_Info_2_cate <- as.factor(All_Data$Product_Info_2_cate)
+levels(All_Data$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)
+levels(All_Data$Product_Info_2_cate) <- c(1:5)
 
 train <- All_Data[which(All_Data$Response > 0),]
 test <- All_Data[which(All_Data$Response == 0),]
 
 # factor
-feature.names <- names(train)[2:ncol(train)-1]
 cat("Factor char fields\n")
 for (f in cate.features) {
     levels <- unique(c(train[[f]], test[[f]]))
@@ -110,14 +113,9 @@ for (f in cate.features) {
     test[[f]] <- factor(test[[f]], levels=levels)
 }
 total <- rbind(train,test); table(total$Product_Info_2)
-levels(total$Product_Info_2) <- c(17, 1, 19, 18, 16, 8, 2, 15, 7, 6, 3, 5, 14, 11, 10, 13, 12, 4, 9)
-levels(total$Product_Info_2_cate)
-levels(total$Product_Info_2_num)
+sapply(names(total), function(x){mean(is.na(total[,x]))})
 train <- total[which(total$Response > 0),]
 test <- total[which(total$Response == 0),]
-
-# train <- train[,!(names(train) %in% cate.features)]
-# test <- test[,!(names(test) %in% cate.features)]
 
 # dummy
 test$Response <- 0
@@ -126,24 +124,18 @@ dummies <- dummyVars(Response ~ ., data = train, sep = "_", levelsOnly = FALSE, 
 train1 <- as.data.frame(predict(dummies, newdata = train))
 test_dum <- as.data.frame(predict(dummies, newdata = test))
 train_dum <- cbind(train1, Response=train$Response)
-
-library(h2o)
-localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
 test_dum$Response <- 0
 total_dum <- rbind(train_dum, test_dum)
-total_df    <- as.h2o(localH2O, total_dum[,2:(ncol(total_dum)-1)])
-total_pca <- h2o.prcomp(training_frame=total_df, transform = 'STANDARDIZE', k = 800)
-total_pca = h2o.predict(object = total_pca, newdata = total_df)
-total.pca <- cbind(Id = total_dum$Id, as.data.frame(total_pca), Response = total_dum$Response)
 
 library(caret)
 names(total_dum) <- c('Id', paste0('Var_', 1:(ncol(total_dum)-2)), 'Response')
-pcafit <- preProcess(as.matrix(total_dum[,2:(ncol(total_dum)-1)]), method = c('pca'), thresh = 0.99, na.remove = TRUE)
-total.pca
+pcafit <- preProcess(as.matrix(total_dum[,2:(ncol(total_dum)-1)]), method = c('center','scale','pca'), thresh = 0.99, na.remove = TRUE)
+total_pca <- predict(pcafit, as.matrix(total_dum[,2:(ncol(total_dum)-1)]))
+total.pca <- cbind(Id = total_dum$Id, as.data.frame(total_pca), Response = total_dum$Response)
 
-train <- total.pca[,total.pca$Response > 0]
-test <- total.pca[,total.pca$Response == 0]
-save(train,test, file='data/find_regression_pca.RData')
+train <- total.pca[total.pca$Response > 0,]
+test <- total.pca[total.pca$Response == 0,]
+save(train,test, file='data/final_regression_pca.RData')
 
 ##################
 ### Caret ########
@@ -219,7 +211,7 @@ names(results) <- c('cv_num', 'kappa', 'optim_kappa', 'fixed_kappa', '1st_cut', 
 
 library(h2o)
 localH2O <- h2o.init(ip = 'localhost', port = 54321, max_mem_size = '12g')
-independent <- feature.names
+independent <- names(train)[2:(ncol(train)-1)]
 dependent <- "Response"
 mthd = 'GBM'
 ### Start Training ###
@@ -270,8 +262,6 @@ for(i in 1:cv){
                 lambda = 1e-12, lambda_search = T, nlambda = 55, lambda_min_ratio = 1e-08,
                 intercept = T
             )
-        #     "gaussian": "identity", "log"
-        #     "tweedie": "tweedie"
     }
     
     print(fit)
@@ -288,9 +278,4 @@ for(i in 1:cv){
     
     results[i,1:11] <- c(paste0('CV_', i), -kappa, -optimal_kappa, -fix_kappa, optCuts$par)
     View(results)
-    # pred_h2o_gbm <- validPreds$predict
-    # pred_h2o_glm <- validPreds$predict
-    # pred_h2o_rf <- validPreds$predict
-    # pred_h2o_dl <- validPreds$predict
-    # validPreds$predict <- (pred_h2o_gbm + pred_h2o_rf + pred_h2o_glm + pred_h2o_dl)/4
 }
