@@ -8,7 +8,7 @@ library(caret)
 # library(mlbench)
 rm(list=ls());gc()
 # load('data/fin_train_test_prod.RData')
-# load('data/V_train_test_valid_xgb_meta_NEW.RData')
+# load('data/V_train_test_xgb_meta_NEW.RData')
 load('data/VII_train_test_xgb_leaf.RData')
 
 ### Evaluation Func ###
