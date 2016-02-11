@@ -1,5 +1,5 @@
 setwd('/Users/ivanliu/Downloads/Prudential-Life-Insurance-Assessment')
-load('data/final_regression_pca.RData')
+load('../final_regression_pca.RData')
 library(caret)
 library(VGAM)
 evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
@@ -17,6 +17,9 @@ dropitems <- c('Id','Response')
 feature.names <- names(train)[!names(train) %in% dropitems] 
 train_sc <- train
 test_sc <- test
+
+fit <- vglm(as.factor(Response) ~ . , family=cumulative(parallel=TRUE), data=train_sc[,-1]) # Logistics regression Using Cumulative Logits
+
 
 ### Start Training ###
 for(i in 1:cv){
