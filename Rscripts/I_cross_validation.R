@@ -9,7 +9,8 @@ library(caret)
 rm(list=ls());gc()
 # load('data/fin_train_test_prod.RData')
 # load('data/V_train_test_xgb_meta_NEW.RData')
-load('data/VII_train_test_xgb_leaf.RData')
+# load('data/VII_train_test_xgb_leaf.RData')
+load('data/xgb_meta_leaf_20150211_dummy.RData')
 
 ### Evaluation Func ###
 evalerror = function(preds, dtrain) {
