@@ -142,7 +142,7 @@ for(i in 1:cv){
         train_meta <- rbind(train_meta, train_2nd)
     }
 }
-
+save(train_meta, file='../final_train_meta.RData')
 
 
 
@@ -185,7 +185,7 @@ clf <- xgb.train(data                = dtrain,
 validPreds <- as.data.frame(predict(clf, dtest, predleaf = TRUE))
 names(validPreds) <- c(paste0('xgb_leaf_', 1:16))
 
-dtest          <- xgb.DMatrix(data=data.matrix(test_sc[,feature.names]),label=test_sc[,'Response']-1)
+dtest          <- xgb.DMatrix(data=data.matrix(test_sc[,feature.names]),label=test_sc[,'Response'])
 dtrain        <- xgb.DMatrix(data=data.matrix(train_sc[,feature.names]),label=train_sc[,'Response']-1) 
 watchlist     <- list(val=dtest,train=dtrain)
 # Feat3
@@ -237,7 +237,8 @@ names(META_XGB_MULSOFT_MLOG) <- paste('META_XGB_MUL_MLOG_', 1:8, sep = '')
 train_2nd <- cbind(train_2nd, META_XGB_MULSOFT, META_XGB_MULSOFT_MLOG, validPreds)
 test_meta <- train_2nd
 
-
+train <- train_meta
+test <- test_meta
 ######################################
 # 4. Split/Output Data #####
 ############################
@@ -253,7 +254,7 @@ total_new <- cbind(total_new[,-c(ncol(total_new))], total1, Response=total_new$R
 train <- total_new[total_new$Response != 0, ]
 test <- total_new[total_new$Response == 0, ]
 
-save(train, test, file = 'data/xgb_meta_leaf_20150210.RData')
+save(train, test, file = 'data/xgb_meta_leaf_20150211_dummy.RData')
 
 
 
