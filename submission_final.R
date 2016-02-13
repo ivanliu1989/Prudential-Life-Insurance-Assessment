@@ -13,12 +13,6 @@ evalerror = function(preds, dtrain) {
     err <- ScoreQuadraticWeightedKappa(as.numeric(labels),as.numeric(round(preds)))
     return(list(metric = "kappa", value = err))
 }
-evalerror_2 = function(x = seq(1.5, 7.5, by = 1), preds, labels) {
-    cuts = c(min(preds), x[1], x[2], x[3], x[4], x[5], x[6], x[7], max(preds))
-    preds = as.numeric(Hmisc::cut2(preds, cuts))
-    err = Metrics::ScoreQuadraticWeightedKappa(as.numeric(labels), preds, 1, 8)
-    return(-err)
-}
 
 ### Split Data ###
 set.seed(1989)
@@ -53,10 +47,8 @@ clf <- xgb.train(data                = dtrain,
 
 ### Make predictions
 validPreds <- predict(clf, dval)
-### Find optimal cutoff
 fix_cut <- c(2.951759, 3.653780, 4.402781, 4.911808, 5.543988, 6.135754, 6.716891)
 validPredsFix = as.numeric(Hmisc::cut2(validPreds, c(-Inf, fix_cut, Inf)));
-
 submission_kappa <- data.frame(Id = test$Id, Response = validPredsFix)
 
 clf <- xgb.train(data                = dtrain,
@@ -78,14 +70,41 @@ clf <- xgb.train(data                = dtrain,
 
 ### Make predictions
 validPreds <- predict(clf, dval)
-### Find optimal cutoff
 fix_cut <- c(2.951759, 3.653780, 4.402781, 4.911808, 5.543988, 6.135754, 6.716891)
 validPredsFix = as.numeric(Hmisc::cut2(validPreds, c(-Inf, fix_cut, Inf)));
-
 submission_rmse <- data.frame(Id = test$Id, Response = validPredsFix)
 
 
+write.csv(submission_kappa, file = 'blending/submit_kappa.csv', row.names = F)
+write.csv(submission_rmse, file = 'blending/submit_rmse.csv', row.names = F)
 
 
+
+### H2O
+
+dropitems <- c('Id','Response')
+independent <- names(train)[!names(train) %in% dropitems] 
+dependent <- "Response"
+colnames(train) <- c('Id', paste0('var_', 1:length(independent)), dependent)
+colnames(test) <- c('Id', paste0('var_', 1:length(independent)))
+independent <- paste0('var_', 1:length(independent))
+
+train_df          <- as.h2o(localH2O, train)
+validation_df     <- as.h2o(localH2O, test)
+
+fit <-
+    h2o.glm(
+        y = dependent, x = independent, training_frame = train_df, #train_df | total_df
+        max_iterations = 100, beta_epsilon = 1e-4, solver = "L_BFGS", #IRLSM  L_BFGS
+        standardize = F, family = 'gaussian', link = 'identity', alpha = 0.1, # 1 lasso 0 ridge
+        lambda = 0, lambda_search = T, nlambda = 55, #lambda_min_ratio = 1e-08,
+        intercept = T
+    )
+
+
+validPreds <- as.data.frame(h2o.predict(object = fit, newdata = validation_df))
+fix_cut <- c(2.951759, 3.653780, 4.402781, 4.911808, 5.543988, 6.135754, 6.716891)
+validPredsFix = as.numeric(Hmisc::cut2(validPreds[,1], c(-Inf, fix_cut, Inf)));
+submission_glm <- data.frame(Id = test$Id, Response = validPredsFix)
 
 
