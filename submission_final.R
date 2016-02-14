@@ -123,7 +123,7 @@ independent <- paste0('var_', 1:length(independent))
 train_df          <- as.h2o(localH2O, train)
 validation_df     <- as.h2o(localH2O, test)
 
-for(i in 1:10){
+for(i in 11:20){
     set.seed(i*66)
     cat(paste0('Start training Deep Learning...', i))
     fit <-
@@ -138,8 +138,8 @@ for(i in 1:10){
             force_load_balance = F, replicate_training_data = F, shuffle_training_data = T
         )
     validPreds <- as.data.frame(h2o.predict(object = fit, newdata = validation_df))
-    fix_cut <- c(2.951759, 3.653780, 4.402781, 4.911808, 5.543988, 6.135754, 6.716891)
-    # fix_cut <- c(2.3617,	3.5307,	4.3668,	4.6543,	5.3891,	6.2634,	6.8177)
+    # fix_cut <- c(2.951759, 3.653780, 4.402781, 4.911808, 5.543988, 6.135754, 6.716891)
+    fix_cut <- c(2.4798,	3.0854,	4.1037,	4.8560,	5.5441,	6.2637,	6.9075)
     validPredsFix = as.numeric(Hmisc::cut2(validPreds[,1], c(-Inf, fix_cut, Inf)));
     submission_glm <- data.frame(Id = test$Id, Response = validPredsFix)
     write.csv(submission_glm, file = paste0('blending/submit_nnets_',i,'.csv'), row.names = F)

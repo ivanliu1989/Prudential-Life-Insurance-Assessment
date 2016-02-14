@@ -60,7 +60,7 @@ for(i in 1:cv){
             nesterov_accelerated_gradient = T, input_dropout_ratio = 0.5, hidden_dropout_ratios = c(0.5,0.5), 
             l1 = 1e-5, l2 = 3e-5, loss = 'MeanSquare', classification_stop = 0.01,
             diagnostics = T, variable_importances = F, fast_mode = F, ignore_const_cols = T,
-            force_load_balance = T, replicate_training_data = F, shuffle_training_data = T
+            force_load_balance = T, replicate_training_data = T, shuffle_training_data = T
         )
     #     }
     #     else if(mthd == 'RF'){
