@@ -146,3 +146,10 @@ for(i in 1:10){
 }
 
 
+### ordinal regression
+library(VGAM)
+# Logistics regression Using Cumulative Logits
+fit <- vglm(as.factor(Response) ~ . , family=cumulative(parallel=TRUE), data=train[,-1]) # Logistics regression Using Cumulative Logits
+p1_r <- predict(fit, type = "response", test)
+p1_t <- max.col(p1_r)
+
