@@ -26,35 +26,3 @@ Product_Info_4, Ins_Age, Ht, Wt, BMI, Employment_Info_1, Employment_Info_4, Empl
 Medical_History_1, Medical_History_10, Medical_History_15, Medical_History_24, Medical_History_32
 
 Medical_Keyword_1-48 are dummy variables.
-
-#### Method
-1. One-hot encode all the variables, 
-2. dropping dummies with very low counts (i.e. 1's less than 10) - in total ~300 variables.
-
-#### Tips from Kaggle Forum
-1. One feature that seemed to help was a count of the number of medical keywords
-2. The product of BMI and Ins_Age also seemed helpful whereas the ratio did not, which is not the result I expected.
-3. Count the number of NA's row-wise.
-4. Get rid of Medical_History_10 and Medical_History_24.
-5. One shot encoding for Product_Info_2.
-6. Count the number of Medical_keywords_* row-wise.
-7. BMI * Ins_Age, row-wise.
-8. Clusterize the whole data (join train & test, impute the missing values with the mean in these data, apply kmeans) and provide the clusters row-wise.
-9. Optimize the cut-offs using 'optim'.
-
-10. 0.002 improvement by optimizing cut-points using a genetic algorithm, compared to using this offset function. (Python code)
-
-#### Training Methods
-1. Genetic programming
-2. Xgboost
-3. nnet
-4. mlr
-5. linear regression
-6. 
-
-#### Results
-1. Raw + tsne + kmean + -1 null - 0.545304983686086/0.565425847292581
-2. Raw + -1 null - 0.547655889464964/0.546402606859081
-3. Encoded + tsne + kmean + median null - 0.552005910930349/0.554265566239907
-4. Encoded + tsne + kmean + -1 null - 0.552686232725092/0.556587256317558
-5. Benchmark - 0.525480640019559/0.671169859915566 
